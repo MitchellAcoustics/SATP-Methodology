@@ -3,7 +3,12 @@ name = "satp-methodology"
 version = "0.1.0"
 requires-python = ">=3.12.2"
 dependencies = [
+    "circumplex>=0.3.0rc1",
     "jupyter>=1.1.1",
     "papermill>=2.6.0",
+    "pipefunc[all]>=0.88.0",
+    "rich>=14.2.0",
+    "rthor>=0.2.1",
     "soundscapy[spi]>=0.8.0rc5",
+    "xarray>=2025.10.1",
 ]

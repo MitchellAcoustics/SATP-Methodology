@@ -3,11 +3,18 @@ project:
 
 manuscript:
   article: index.qmd
+  notebooks: 
+    - notebook: computation/SATP-Methodology.ipynb
+      title: "SATP Methodology"
+
+number-sections: true
 
 format:
   html:
     comments:
       hypothesis: true
+    theme: cosmo
+  nature-pdf: default
   docx: default
   jats: default
 
