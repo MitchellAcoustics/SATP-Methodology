@@ -1,35 +1,90 @@
 {
-  "name": "Release - Quarto Codespaces",
-  "image": "ghcr.io/mcanouil/quarto-codespaces:latest",
+  "name": "Release - Universal - Quarto Codespaces",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "args": {
+      "IMAGE": "mcr.microsoft.com/devcontainers/base:ubuntu"
+    },
+    "options": [
+      "--label",
+      "org.opencontainers.image.title=Quarto Codespaces",
+      "--label",
+      "org.opencontainers.image.description=Quarto Codespaces / Dev Containers setup for quick online testing.",
+      "--label",
+      "org.opencontainers.image.authors=Mickaël CANOUIL <https://mickael.canouil.fr>",
+      "--label",
+      "org.opencontainers.image.url=https://github.com/mcanouil/quarto-codespaces",
+      "--label",
+      "org.opencontainers.image.source=https://github.com/mcanouil/quarto-codespaces",
+      // "--label", "org.opencontainers.image.ref.name=",
+      // "--label", "org.opencontainers.image.version=",
+      "--label",
+      "org.opencontainers.image.licenses=MIT"
+    ]
+  },
   "remoteUser": "vscode",
+  "remoteEnv": {
+    "PKG_SYSREQS": "true", // From https://github.com/rocker-org/devcontainer-features/blob/main/src/r-rig/README.md
+    "UV_LINK_MODE": "copy"
+  },
+  // "containerEnv": {
+  //   "LD_LIBRARY_PATH": "/usr/local/lib/R/lib"
+  // },
+  "postCreateCommand": "bash /workspaces/SATP-Methodology/init-env.sh -w all",
+  // "postStartCommand": "bash /workspaces/SATP-Methodology/setup-r-lib.sh",
   "features": {
+    "./quarto-computing-dependencies": {
+      "rDeps": "yaml,rmarkdown",
+      "pythonDeps": "jupyter,papermill"
+      // "juliaDeps": "IJulia"
+    },
+    "./uv": {
+      "version": "latest"
+    },
     "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
-      "version": "release"
+      "version": "release",
+      "installTinyTex": "false",
+      "installChromium": "false"
     }
   },
   "customizations": {
     "vscode": {
+      "extensions.verifySignature": false,
       "extensions": [
         "quarto.quarto",
         "mcanouil.quarto-wizard",
         "REditorSupport.r",
         "ms-python.python",
-        "julialang.language-julia",
-        "ms-python.black-formatter",
-        "ms-python.flake8",
-        "ms-python.vscode-pylance",
-        "ms-python.pylint",
-        "ms-python.isort",
+        "astral-sh.ty",
+        "charliermarsh.ruff",
+        "kevinrose.vsc-python-indent",
+        "ms-azuretools.vscode-docker",
         "ms-toolsai.jupyter",
+        "redhat.vscode-yaml",
+        "shardulm94.trailing-spaces",
+        "streetsidesoftware.code-spell-checker",
+        "tamasfe.even-better-toml",
         "Posit.air-vscode"
       ],
       "settings": {
-        "r.rterm.option": ["--no-save", "--no-restore-data", "--quiet"],
-        "r.useRenvLibPath": true,
+        "r.rterm.option": [
+          "--no-save",
+          "--no-restore-data",
+          "--quiet"
+        ],
+        // "r.useRenvLibPath": true,
         "[r]": {
           "editor.defaultFormatter": "Posit.air-vscode",
           "editor.formatOnSave": true
-        }
+        },
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true
+        },
+        "notebook.formatOnSave.enabled": true,
+        "notebook.defaultFormatter": "charliermarsh.ruff",
+        "notebook.formatOnCellExecution": false
       }
     }
   }

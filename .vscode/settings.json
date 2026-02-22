@@ -1,0 +1,17 @@
+{
+    "cSpell.words": [
+        "Axelsson",
+        "Berglund"
+    ],
+    "python-envs.pythonProjects": [],
+    "terminal.integrated.profiles.linux": {
+        "BashWithStartup": {
+            "path": "bash",
+            "args": [
+                "--init-file",
+                "./setup-r-lib.sh"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "BashWithStartup"
+}

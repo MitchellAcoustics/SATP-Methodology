@@ -11,17 +11,27 @@ show_help() {
   echo "  --help/-h: Show this help message."
 }
 
+# initialise_r() {
+#   local deps=$1
+#   deps=$(echo "'${deps}'" | sed "s/,/','/g")
+#   if [ "${FORCE}" = true ] || [ ! -f "renv.lock" ]; then
+#     if [ -f ".Rprofile" ] && grep -q 'source("renv/activate.R")' .Rprofile; then
+#       sed -i '/source("renv\/activate.R")/d' .Rprofile
+#     fi
+#     Rscript -e 'if (!requireNamespace("yaml", quietly = TRUE)) install.packages("yaml")'
+#     Rscript -e 'renv::init(bare = FALSE)'
+#     Rscript -e "renv::install(c(${deps}))"
+#     Rscript -e 'renv::snapshot(type = "all")'
+#   fi
+# }
+
+# initialise_r() {
+#   Rscript -e 'pak::local_install_deps()'
+# }
 initialise_r() {
   local deps=$1
-  deps=$(echo "${deps}" | sed 's/,/","/g')
-  if [ "${FORCE}" = true ] || [ ! -f "renv.lock" ]; then
-    if [ -f ".Rprofile" ] && grep -q 'source("renv/activate.R")' .Rprofile; then
-      sed -i '' '/source("renv\/activate.R")/d' .Rprofile
-    fi
-    Rscript -e 'renv::init(bare = FALSE)'
-    Rscript -e "renv::install(c('${deps}'))"
-    Rscript -e 'renv::snapshot(type = "all")'
-  fi
+  deps=$(echo "'${deps}'" | sed "s/,/','/g")
+  Rscript -e "pak::pkg_install(c(${deps}))"
 }
 
 initialise_python() {
@@ -45,6 +55,7 @@ initialise_uv() {
     uv add ${deps}
     uv sync
   fi
+  uv sync
 }
 
 initialise_julia() {
@@ -83,18 +94,19 @@ done
 
 case ${WHAT} in
   all)
-    initialise_r "rmarkdown,languageserver,nx10/httpgd@v2.0.4"
+    initialise_r "rmarkdown,languageserver,yaml"
     initialise_uv "jupyter,papermill"
-    initialise_julia "IJulia"
+    # initialise_julia "IJulia"
+    source .venv/bin/activate
     ;;
   r)
-    initialise_r "rmarkdown,languageserver,nx10/httpgd@v2.0.4"
+    initialise_r "rmarkdown,languageserver,yaml"
     ;;
   python)
     initialise_uv "jupyter,papermill"
-    ;;
-  julia)
-    initialise_julia "IJulia"
+  #   ;;
+  # julia)
+  #   initialise_julia "IJulia"
     ;;
   *)
     echo "Unknown option for --what: ${WHAT}"
