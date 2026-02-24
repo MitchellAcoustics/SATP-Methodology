@@ -12,6 +12,7 @@ dependencies = [
     "rthor>=0.2.1",
     "soundscapy[spi]>=0.8.0rc5",
     # "xarray[accel,types]>=2025.10.1",
+    "xarray>=2026.2.0",
 ]
 
 [tool.uv.sources]
