@@ -74,7 +74,7 @@
         "RENV_CONFIG_PAK_ENABLED": "TRUE",
         "UV_LINK_MODE": "copy"
     },
-    "postCreateCommand": "uv sync && Rscript -e 'renv::restore(prompt=FALSE)'",
+    "postCreateCommand": "uv sync && Rscript -e 'renv::restore(prompt=FALSE)' && Rscript -e 'tinytex::install_tinytex()' && quarto check",
     "remoteEnv": {
         "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
     }
