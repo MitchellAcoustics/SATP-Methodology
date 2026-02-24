@@ -1,91 +1,69 @@
 {
-  "name": "Release - Universal - Quarto Codespaces",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".",
-    "args": {
-      "IMAGE": "mcr.microsoft.com/devcontainers/base:ubuntu"
-    },
-    "options": [
-      "--label",
-      "org.opencontainers.image.title=Quarto Codespaces",
-      "--label",
-      "org.opencontainers.image.description=Quarto Codespaces / Dev Containers setup for quick online testing.",
-      "--label",
-      "org.opencontainers.image.authors=Mickaël CANOUIL <https://mickael.canouil.fr>",
-      "--label",
-      "org.opencontainers.image.url=https://github.com/mcanouil/quarto-codespaces",
-      "--label",
-      "org.opencontainers.image.source=https://github.com/mcanouil/quarto-codespaces",
-      // "--label", "org.opencontainers.image.ref.name=",
-      // "--label", "org.opencontainers.image.version=",
-      "--label",
-      "org.opencontainers.image.licenses=MIT"
-    ]
-  },
-  "remoteUser": "vscode",
-  "remoteEnv": {
-    "PKG_SYSREQS": "true", // From https://github.com/rocker-org/devcontainer-features/blob/main/src/r-rig/README.md
-    "UV_LINK_MODE": "copy"
-  },
-  // "containerEnv": {
-  //   "LD_LIBRARY_PATH": "/usr/local/lib/R/lib"
-  // },
-  "postCreateCommand": "bash /workspaces/SATP-Methodology/init-env.sh -w all",
-  // "postStartCommand": "bash /workspaces/SATP-Methodology/setup-r-lib.sh",
-  "features": {
-    "./quarto-computing-dependencies": {
-      "rDeps": "yaml,rmarkdown",
-      "pythonDeps": "jupyter,papermill"
-      // "juliaDeps": "IJulia"
-    },
-    "./uv": {
-      "version": "latest"
-    },
-    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
-      "version": "release",
-      "installTinyTex": "false",
-      "installChromium": "false"
-    }
-  },
-  "customizations": {
-    "vscode": {
-      "extensions.verifySignature": false,
-      "extensions": [
-        "quarto.quarto",
-        "mcanouil.quarto-wizard",
-        "REditorSupport.r",
-        "ms-python.python",
-        "astral-sh.ty",
-        "charliermarsh.ruff",
-        "kevinrose.vsc-python-indent",
-        "ms-azuretools.vscode-docker",
-        "ms-toolsai.jupyter",
-        "redhat.vscode-yaml",
-        "shardulm94.trailing-spaces",
-        "streetsidesoftware.code-spell-checker",
-        "tamasfe.even-better-toml",
-        "Posit.air-vscode"
-      ],
-      "settings": {
-        "r.rterm.option": [
-          "--no-save",
-          "--no-restore-data",
-          "--quiet"
-        ],
-        // "r.useRenvLibPath": true,
-        "[r]": {
-          "editor.defaultFormatter": "Posit.air-vscode",
-          "editor.formatOnSave": true
+    "name": "SATP Methodology - Dev Container",
+    "dockerComposeFile": "docker-compose.yaml",
+    "service": "satp-dev",
+    "remoteUser": "vscode",
+    "workspaceFolder": "/workspace",
+    "mounts": [
+        {
+            "source": "satp-cache",
+            "target": "/home/vscode/.cache",
+            "type": "volume"
         },
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff",
-          "editor.formatOnSave": true
-        },
-        "notebook.formatOnSave.enabled": true,
-        "notebook.defaultFormatter": "charliermarsh.ruff",
-        "notebook.formatOnCellExecution": false
-      }
+        {
+            "source": "satp-venv",
+            "target": "${containerWorkspaceFolder}/.venv",
+            "type": "volume"
+        }
+    ],
+    "features": {
+        "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
+            "version": "latest"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "charliermarsh.ruff",
+                "ms-python.debugpy",
+                "ms-python.vscode-pylance",
+                "ms-vscode.makefile-tools",
+                "ms-azuretools.vscode-docker",
+                "quarto.quarto",
+                "REditorSupport.r",
+                "Posit.air-vscode",
+                "yzhang.markdown-all-in-one",
+                "tamasfe.even-better-toml",
+                "redhat.vscode-yaml",
+                "eamodio.gitlens",
+                "mhutchie.git-graph"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+                "python.linting.enabled": true,
+                "python.linting.ruffEnabled": true,
+                "python.formatting.provider": "none",
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.fixAll.ruff": "explicit"
+                    }
+                },
+                "jupyter.notebookFileRoot": "${workspaceFolder}",
+                "quarto.render.previewType": "external",
+                "r.packages": []
+            }
+        }
+    },
+    "containerEnv": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "postCreateCommand": "uv sync && /workspace/.devcontainer/install-r-packages.sh",
+    "remoteEnv": {
+        "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
     }
-  }
 }

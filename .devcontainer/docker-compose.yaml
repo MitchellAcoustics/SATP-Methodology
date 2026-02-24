@@ -1,0 +1,35 @@
+services:
+  satp-dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    image: satp-methodology:devcontainer
+    container_name: satp-dev
+    working_dir: /workspace
+    command: sleep infinity
+    
+    volumes:
+      # Workspace
+      - ..:/workspace:cached
+      # Named volumes for performance
+      - satp-cache:/home/vscode/.cache
+      - satp-venv:/workspace/.venv
+    
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      TZ: UTC
+    
+    user: vscode
+    stdin_open: true
+    tty: true
+    networks:
+      - satp
+
+networks:
+  satp:
+    driver: bridge
+
+volumes:
+  satp-cache:
+  satp-venv:
