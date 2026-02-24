@@ -32,7 +32,9 @@ FROM python:3.12.5-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     UV_LINK_MODE=copy \
-    UV_COMPILE_BYTECODE=1
+    UV_COMPILE_BYTECODE=1 \
+    RENV_PATHS_CACHE=/home/vscode/.cache/R/renv \
+    RENV_CONFIG_PAK_ENABLED=TRUE
 
 # Install runtime dependencies, dev tools, and R
 # Includes system libraries for R packages with C/C++ dependencies
@@ -64,6 +66,8 @@ RUN groupadd --gid 1000 vscode && \
     useradd -s /bin/bash --uid 1000 --gid 1000 -m vscode && \
     echo "vscode ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/vscode && \
     mkdir -p /home/vscode/.cache && \
+    mkdir -p /home/vscode/.cache/R/renv && \
+    mkdir -p /home/vscode/.cache/R/pkgcache/pkg && \
     chown -R vscode:vscode /home/vscode
 
 # Configure R library directory for vscode user to write packages
@@ -72,18 +76,17 @@ RUN mkdir -p /usr/local/lib/R/site-library && \
     mkdir -p /usr/lib/R/site-library && \
     chmod 2777 /usr/lib/R/site-library
 
+# Install renv system-wide for bootstrap
+RUN Rscript -e "install.packages('renv', repos='https://cloud.r-project.org')"
+
 WORKDIR /workspace
 
 # Copy Python packages from builder
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy project files with correct ownership
+# Copy project files with correct ownership (from root context)
 COPY --chown=vscode:vscode . .
-
-# Copy R installation scripts with execute permissions
-COPY --chmod=755 .devcontainer/install-r-packages.R /workspace/.devcontainer/
-COPY --chmod=755 .devcontainer/install-r-packages.sh /workspace/.devcontainer/
 
 # Install uv in the final image for development
 RUN pip install --no-cache-dir uv

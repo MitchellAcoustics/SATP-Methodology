@@ -1,135 +1,168 @@
-# R Package Installation Examples
+# Managing R Packages with renv
 
-This document shows how to configure R packages for automatic installation when the dev container starts.
+This project uses **renv** for reproducible R package management. R packages are defined in `renv.lock` (not in devcontainer.json).
 
-## Configuration
+## Quick Start
 
-R packages are specified in `.devcontainer/devcontainer.json` under:
+### Add a Package
 
-```json
-"settings": {
-    "r.packages": [
-        "package1",
-        "package2",
-        "package3"
-    ]
-}
-```
-
-The packages will be automatically installed during container creation via the `postCreateCommand`.
-
-## Recommended Packages by Use Case
-
-### Minimal Setup (Fast Installation)
-```json
-"r.packages": []
-```
-No packages installed. Install manually as needed in the container terminal.
-
-### Data Science Essentials (Medium Installation Time)
-```json
-"r.packages": [
-    "jsonlite",
-    "tidyr",
-    "dplyr"
-]
-```
-
-### Scientific Computing (Slower Installation)
-```json
-"r.packages": [
-    "yaml",
-    "jsonlite",
-    "stringr",
-    "ggplot2"
-]
-```
-
-### Full Environment (Longest Installation)
-```json
-"r.packages": [
-    "devtools",
-    "tidyverse",
-    "rmarkdown",
-    "shiny"
-]
-```
-
-**Warning:** Some packages take 5-15 minutes to compile (especially those with C/C++ dependencies like `devtools`, `tidyverse`).
-
-## Installation Time Guide
-
-**Fast (< 2 minutes):**
-- `jsonlite`
-- `curl`
-- `stringr`
-
-**Medium (2-5 minutes):**
-- `yaml`
-- `ggplot2`
-- `dplyr`
-- `reshape2`
-
-**Slow (5-15+ minutes):**
-- `devtools`
-- `tidyverse`
-- `rmarkdown`
-- `data.table`
-
-## Installation Process
-
-1. Edit `devcontainer.json` and add your packages to `r.packages`
-2. Rebuild the dev container: `Dev Containers: Rebuild Container`
-3. VS Code will show progress in the terminal (look for "Installing R packages..." message)
-4. Once complete, packages are available in the R environment
-
-## Troubleshooting Installation
-
-### Installation Fails
-
-If a package fails to install:
-1. Check the error message in VS Code's terminal
-2. Most common causes: network issues, missing system dependencies, or incompatible package versions
-3. Try installing the package manually in the container:
+1. Open an R console in the container:
    ```bash
-   Rscript -e 'install.packages("package_name")'
+   R
    ```
 
-### Installation Takes Too Long
+2. Install the package:
+   ```r
+   renv::install("package_name")
+   ```
 
-- Building from source can take 5-15 minutes per package
-- Consider reducing the number of packages
-- Use binary packages when available (usually happens automatically on recent R versions)
+3. This automatically updates `renv.lock` with the exact version.
 
-### Package Still Not Installed
+4. Exit R:
+   ```r
+   q()
+   ```
 
-After container is ready, verify installation manually:
+### Restore All Packages (on rebuild)
+
+When the dev container starts, it automatically runs:
 ```bash
-Rscript -e 'library(yaml); cat("yaml installed!\n")'
+Rscript -e 'renv::restore(prompt=FALSE)'
 ```
 
-## Manual Installation (Without Rebuild)
+This installs all packages from `renv.lock` using **pak** for fast, parallel installation.
 
-If you want to add packages without rebuilding:
+## How It Works
+
+- **renv.lock**: Defines exact versions of all R packages (like `requirements.txt` for Python)
+- **pak**: Fast parallel package installer that renv uses when `RENV_CONFIG_PAK_ENABLED=TRUE`
+- **Caching**: Downloaded packages cached in `renv-cache` volume for faster rebuilds
+- **Reproducibility**: Everyone gets the exact same package versions from `renv.lock`
+
+## Managing Packages
+
+### Add a Package (Interactive)
 
 ```bash
-# Inside container terminal
-Rscript -e 'install.packages("new_package")'
-
-# Or using R directly
+# In container terminal
 R
-> install.packages("new_package")
+> renv::install("tidyverse")
 > q()
 ```
 
-## Current Configuration
+This updates `renv.lock` automatically.
 
-Your current `devcontainer.json` specifies:
+### Add Multiple Packages at Once
 
-```json
-"r.packages": [
-    "yaml"
-]
+```bash
+# In container terminal
+R
+> renv::install(c("ggplot2", "dplyr", "tidyr"))
+> q()
 ```
 
-To change this, edit `.devcontainer/devcontainer.json` directly and rebuild the container.
+### Update a Specific Package
+
+```bash
+R
+> renv::install("package_name")  # Re-installs or upgrades
+> q()
+```
+
+### View Installed Packages
+
+```bash
+R
+> renv::status()  # Shows locked vs installed versions
+> q()
+```
+
+### Snapshot Changes (Advanced)
+
+If you modify `renv.lock` manually:
+```bash
+R
+> renv::snapshot()  # Updates lock file with current library state
+> q()
+```
+
+## Performance
+
+With pak enabled, package installation is:
+- **Parallel**: Multiple packages download/compile simultaneously
+- **Cached**: Downloaded binaries stored in `renv-cache` volume
+- **Fast**: Binary packages preferred when available (usually on recent R)
+
+First build takes longer (packages compile from source if needed), but subsequent builds are much faster due to caching.
+
+## renv.lock Format
+
+The file contains metadata like:
+
+```json
+{
+  "R": {
+    "Version": "4.2.2",
+    "Repositories": [
+      {
+        "Name": "CRAN",
+        "URL": "https://cloud.r-project.org"
+      }
+    ]
+  },
+  "Packages": {
+    "yaml": {
+      "Package": "yaml",
+      "Version": "2.3.7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [],
+      "Hash": "abc123..."
+    }
+  }
+}
+```
+
+**Don't edit this manually**—renv updates it automatically when you install packages.
+
+## Troubleshooting
+
+### Package won't install
+
+- Check internet connection
+- Try manual install: `Rscript -e 'renv::install("package_name")'`
+- Check for system library requirements (e.g., `libfontconfig1-dev` for font-related packages)
+
+### Packages stuck installing
+
+- pak is running packages in parallel—this is normal
+- Check available memory; large packages need space to compile
+- Monitor with `docker stats satp-dev` in another terminal
+
+### Need to clear cache
+
+```bash
+# From host machine
+docker volume rm renv-cache
+# Then rebuild container
+```
+
+### Restore from scratch
+
+```bash
+R
+> renv::restore(clean = TRUE, prompt = FALSE)  # Remove unlisted packages first
+> q()
+```
+
+## Recommended Packages
+
+Start with these lightweight packages:
+- `yaml` - YAML parsing
+- `jsonlite` - JSON handling
+- `stringr` - String manipulation
+
+Heavier packages (compile slower but worth it):
+- `tidyverse` - Data manipulation
+- `ggplot2` - Plotting
+- `rmarkdown` - Document generation

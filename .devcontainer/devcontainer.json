@@ -14,6 +14,16 @@
             "source": "satp-venv",
             "target": "${containerWorkspaceFolder}/.venv",
             "type": "volume"
+        },
+        {
+            "source": "renv-cache",
+            "target": "/home/vscode/.cache/R/renv",
+            "type": "volume"
+        },
+        {
+            "source": "pak-cache",
+            "target": "/home/vscode/.cache/R/pkgcache",
+            "type": "volume"
         }
     ],
     "features": {
@@ -53,16 +63,17 @@
                     }
                 },
                 "jupyter.notebookFileRoot": "${workspaceFolder}",
-                "quarto.render.previewType": "external",
-                "r.packages": []
+                "quarto.render.previewType": "external"
             }
         }
     },
     "containerEnv": {
         "PYTHONUNBUFFERED": "1",
-        "PYTHONDONTWRITEBYTECODE": "1"
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "RENV_PATHS_CACHE": "/home/vscode/.cache/R/renv",
+        "RENV_CONFIG_PAK_ENABLED": "TRUE"
     },
-    "postCreateCommand": "uv sync && /workspace/.devcontainer/install-r-packages.sh",
+    "postCreateCommand": "uv sync && Rscript -e 'renv::restore(prompt=FALSE)'",
     "remoteEnv": {
         "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
     }

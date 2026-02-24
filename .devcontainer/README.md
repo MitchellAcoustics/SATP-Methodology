@@ -16,9 +16,9 @@ This project is configured to run in a Docker-based development environment usin
    - VS Code will build the container and reconnect inside it
 
 3. **Initial Setup:**
-   - The container will automatically run `uv sync` on first launch
-   - This installs all Python dependencies into `.venv/` inside the container
-   - R packages specified in `devcontainer.json` will be installed
+   - The container will automatically run `uv sync` to install Python dependencies
+   - Then `renv::restore()` to install all R packages from `renv.lock`
+   - R packages install in parallel using pak for speed
    - You're ready to work once the terminal is ready
 
 ## What's Inside
@@ -26,12 +26,37 @@ This project is configured to run in a Docker-based development environment usin
 The dev container includes:
 
 - **Python 3.12.5** with all project dependencies (rpy2, xarray, circumplex, soundscapy, etc.)
-- **R 4.2+** with development libraries for rpy2 integration
+- **R 4.2.2** with development libraries for rpy2 integration
+- **renv** for reproducible R package management with pak for fast installation
 - **Quarto** for document rendering and publishing
 - **Jupyter** support for interactive notebooks
 - **Git, uv, and development tools** pre-installed
 - **Ruff** for Python linting and formatting
 - **VS Code extensions** for Python, Jupyter, Quarto, R, Docker, and Git
+
+## Customizing Python and R Versions
+
+To use different Python or R versions, edit `.devcontainer/devcontainer.json`:
+
+```json
+"build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "args": {
+        "PYTHON_VERSION": "3.11.8",
+        "R_VERSION": "4.3.1"
+    }
+}
+```
+
+Then rebuild: `Dev Containers: Rebuild Container`
+
+**Available versions:**
+- **Python:** Any version available on Docker Hub (e.g., `3.10`, `3.11.8`, `3.12.5`)
+- **R:** Any version available from official R repositories (e.g., `4.2.2`, `4.3.1`)
+
+The same versions are also referenced in:
+- `.devcontainer/docker-compose.yaml` (for manual builds)
 
 ## Environment
 
@@ -40,6 +65,8 @@ The dev container includes:
 - **Volumes:**
   - Cache volume for faster builds and package downloads
   - Virtual environment volume for persistence
+  - renv cache volume for R package caching
+  - pak cache volume for R package binary caching
   - Workspace mount for live editing
 
 ## Usage
@@ -65,7 +92,7 @@ quarto preview index.qmd
 quarto render index.qmd --to html
 ```
 
-### Install Additional Dependencies
+### Install Additional Python Dependencies
 
 To add new packages to your project:
 
@@ -75,32 +102,19 @@ uv add package_name
 
 This updates `pyproject.toml` and `uv.lock`, which persist after container rebuild.
 
-## R Packages
+### Install Additional R Packages
 
-To install R packages automatically when the container starts, add them to `devcontainer.json`:
-
-```json
-"settings": {
-    "r.packages": [
-        "yaml",
-        "ggplot2",
-        "dplyr"
-    ]
-}
-```
-
-The packages will be installed during the `postCreateCommand` phase (runs automatically on first container build).
-
-**Important:** R package compilation can take several minutes, especially for packages with C/C++ dependencies (e.g., `devtools`, `tidyverse`). Start with simple packages like `yaml`, `jsonlite`, or pure-R packages.
-
-### Installing R Packages Manually
-
-If a package fails to install during build or you want to add packages later:
+To add R packages, use renv inside the container:
 
 ```bash
-# In the container terminal
-Rscript -e 'install.packages("package_name")'
+R
+> renv::install("package_name")
+> q()
 ```
+
+This updates `renv.lock` automatically. Packages install in parallel using pak for speed.
+
+See [R_PACKAGES.md](./R_PACKAGES.md) for detailed R package management.
 
 ## Troubleshooting
 
@@ -110,28 +124,40 @@ Rscript -e 'install.packages("package_name")'
 - Check Docker logs: `docker logs satp-dev`
 - Rebuild the container: `Dev Containers: Rebuild Container`
 
-### Package installation fails
+### Python package installation fails
 
 - Run `uv sync` manually: Open terminal in VS Code and run the command
 - Check internet connection (some packages pull from GitHub)
 - Clear cache if needed: `docker volume prune`
 
-### R package installation times out
+### R package restoration fails
 
-- R packages with C/C++ dependencies (devtools, tidyverse, etc.) can take 5-15 minutes to compile
-- Monitor progress in VS Code's terminal during `postCreateCommand`
-- If it fails, rebuild with fewer packages and add others manually later
+- Check the error in VS Code's terminal during `postCreateCommand`
+- Most issues are missing system libraries (Dockerfile has common ones pre-installed)
+- Try manual installation: `Rscript -e 'renv::install("package_name")'`
+- See [R_PACKAGES.md](./R_PACKAGES.md) for troubleshooting
 
 ### R integration issues
 
 - Verify rpy2 loaded: `python -c "import rpy2; print(rpy2.__version__)"`
 - Check R path: `which R` (should show `/usr/bin/R`)
-- Check installed R packages: `Rscript -e 'library(yaml); print(packageVersion("yaml"))'`
+- Check renv status: `Rscript -e 'renv::status()'`
 
 ### Jupyter kernel connection issues
 
 - Restart VS Code Jupyter kernel: `Shift+Cmd+P` → "Jupyter: Restart Kernel"
 - Reload VS Code window: `Cmd+R` (Mac) or `F5` (Windows/Linux)
+
+### Version mismatch after changing Python/R versions
+
+If you change versions in `devcontainer.json`, you need a clean rebuild:
+1. `Dev Containers: Remove Container`
+2. `Dev Containers: Open in Container` (will rebuild fresh)
+
+Or manually:
+```bash
+docker compose -f .devcontainer/docker-compose.yaml down -v
+```
 
 ## Container Management
 
@@ -156,14 +182,16 @@ Press `Shift+Cmd+P` → `Dev Containers: Rebuild Container` (cleans and rebuilds
 ## Performance Notes
 
 - The `.venv` is stored in a named volume for faster I/O on Docker Desktop
-- Cache directory persists between builds to speed up package downloads
+- R packages cached in `renv-cache` volume for speedy rebuilds
+- Python cache directory persists between builds to speed up package downloads
+- renv uses **pak** for parallel package installation (significantly faster than sequential)
 - Workspace is mounted with `:cached` for better performance on macOS
-- R package compilation happens in the container (not on your host machine)
 
 ## Documentation
 
 - **Dev Containers Docs:** https://code.visualstudio.com/docs/devcontainers/containers
 - **Docker Compose:** https://docs.docker.com/compose/
 - **uv Package Manager:** https://docs.astral.sh/uv/
+- **renv Documentation:** https://rstudio.github.io/renv/
+- **pak (R package installer):** https://pak.r-lib.org/
 - **Quarto:** https://quarto.org/docs/
-- **R Package Installation:** https://cran.r-project.org/
