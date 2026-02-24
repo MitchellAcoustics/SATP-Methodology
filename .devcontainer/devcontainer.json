@@ -71,7 +71,8 @@
         "PYTHONUNBUFFERED": "1",
         "PYTHONDONTWRITEBYTECODE": "1",
         "RENV_PATHS_CACHE": "/home/vscode/.cache/R/renv",
-        "RENV_CONFIG_PAK_ENABLED": "TRUE"
+        "RENV_CONFIG_PAK_ENABLED": "TRUE",
+        "UV_LINK_MODE": "copy"
     },
     "postCreateCommand": "uv sync && Rscript -e 'renv::restore(prompt=FALSE)'",
     "remoteEnv": {

@@ -1,54 +1,30 @@
-# Build stage for Python dependencies
-FROM python:3.12.5-slim AS builder
+# Build arguments
+ARG R_VERSION=4.2.2
+
+# Dev container stage - use rocker for proper R version support
+FROM rocker/r-ver:${R_VERSION}
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    UV_COMPILE_BYTECODE=1
+    RENV_PATHS_CACHE=/home/rstudio/.cache/R/renv \
+    RENV_CONFIG_PAK_ENABLED=TRUE \
+    UV_LINK_MODE=copy
 
-# Install build dependencies and system libraries for rpy2
+# Install Python, R dev libs, and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    r-base \
-    r-base-dev \
+    python3 \
+    python3-dev \
+    python3-venv \
+    python3-pip \
     libcurl4-openssl-dev \
+    libpcre2-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libicu-dev \
     libssl-dev \
     libxml2-dev \
-    libffi-dev \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /build
-
-COPY pyproject.toml uv.lock* ./
-
-# Install uv and compile dependencies
-RUN pip install --no-cache-dir uv && \
-    uv pip install --system --compile-bytecode /build
-
-# Dev container stage
-FROM python:3.12.5-slim
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    UV_LINK_MODE=copy \
-    UV_COMPILE_BYTECODE=1 \
-    RENV_PATHS_CACHE=/home/vscode/.cache/R/renv \
-    RENV_CONFIG_PAK_ENABLED=TRUE
-
-# Install runtime dependencies, dev tools, and R
-# Includes system libraries for R packages with C/C++ dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    r-base \
-    r-base-dev \
-    libgit2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libxml2-dev \
-    pandoc \
     ca-certificates \
     git \
-    curl \
     wget \
     sudo \
     build-essential \
@@ -59,7 +35,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libtiff5-dev \
     libjpeg-dev \
+    pandoc \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy uv binary from official distroless image
+COPY --from=ghcr.io/astral-sh/uv:0.10.5 /uv /uvx /bin/
 
 # Create vscode user (matching VS Code devcontainer conventions)
 RUN groupadd --gid 1000 vscode && \
@@ -81,15 +61,8 @@ RUN Rscript -e "install.packages('renv', repos='https://cloud.r-project.org')"
 
 WORKDIR /workspace
 
-# Copy Python packages from builder
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# Copy project files with correct ownership (from root context)
+# Copy project files with correct ownership
 COPY --chown=vscode:vscode . .
-
-# Install uv in the final image for development
-RUN pip install --no-cache-dir uv
 
 # Switch to vscode user
 USER vscode

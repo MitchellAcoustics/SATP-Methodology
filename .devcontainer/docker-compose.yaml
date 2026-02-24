@@ -3,6 +3,8 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
+      args:
+        R_VERSION: "4.4.2"
     image: satp-methodology:devcontainer
     container_name: satp-dev
     working_dir: /workspace
@@ -25,6 +27,8 @@ services:
       # Enable renv cache and pak for faster installation
       RENV_PATHS_CACHE: /home/vscode/.cache/R/renv
       RENV_CONFIG_PAK_ENABLED: "TRUE"
+      # Use copy mode for uv (volumes don't support hardlinks)
+      UV_LINK_MODE: copy
 
     user: vscode
     stdin_open: true

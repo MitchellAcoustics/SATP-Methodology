@@ -16,7 +16,7 @@ This project is configured to run in a Docker-based development environment usin
    - VS Code will build the container and reconnect inside it
 
 3. **Initial Setup:**
-   - The container will automatically run `uv sync` to install Python dependencies
+   - The container will automatically run `uv sync` to install Python dependencies (specified in `pyproject.toml`)
    - Then `renv::restore()` to install all R packages from `renv.lock`
    - R packages install in parallel using pak for speed
    - You're ready to work once the terminal is ready
@@ -25,43 +25,50 @@ This project is configured to run in a Docker-based development environment usin
 
 The dev container includes:
 
-- **Python 3.12.5** with all project dependencies (rpy2, xarray, circumplex, soundscapy, etc.)
+- **uv** package manager for Python environment and dependency management
+- **Python** version managed by uv based on `pyproject.toml` requirements
 - **R 4.2.2** with development libraries for rpy2 integration
 - **renv** for reproducible R package management with pak for fast installation
 - **Quarto** for document rendering and publishing
 - **Jupyter** support for interactive notebooks
-- **Git, uv, and development tools** pre-installed
+- **Git, development tools, and system libraries** pre-installed
 - **Ruff** for Python linting and formatting
 - **VS Code extensions** for Python, Jupyter, Quarto, R, Docker, and Git
 
-## Customizing Python and R Versions
+## Customizing R Version
 
-To use different Python or R versions, edit `.devcontainer/devcontainer.json`:
+To use a different R version, edit `.devcontainer/docker-compose.yaml`:
 
-```json
-"build": {
-    "dockerfile": "Dockerfile",
-    "context": ".",
-    "args": {
-        "PYTHON_VERSION": "3.11.8",
-        "R_VERSION": "4.3.1"
-    }
-}
+```yaml
+build:
+  args:
+    R_VERSION: "4.3.1"
 ```
 
 Then rebuild: `Dev Containers: Rebuild Container`
 
-**Available versions:**
-- **Python:** Any version available on Docker Hub (e.g., `3.10`, `3.11.8`, `3.12.5`)
-- **R:** Any version available from official R repositories (e.g., `4.2.2`, `4.3.1`)
+**Available R versions:** Any version available from the Rocker project (e.g., `4.1.3`, `4.2.2`, `4.3.1`, `4.4.0`)
 
-The same versions are also referenced in:
-- `.devcontainer/docker-compose.yaml` (for manual builds)
+Check available versions at: https://hub.docker.com/r/rocker/r-ver/tags
+
+## Python Version Management
+
+Python version is automatically managed by **uv** based on your `pyproject.toml`. To change Python versions:
+
+1. Edit `pyproject.toml` and update the `requires-python` field:
+   ```toml
+   requires-python = ">=3.11"
+   ```
+
+2. Run `uv sync` in the container to install the appropriate Python version
+
+uv handles downloading and managing the exact Python version you need.
 
 ## Environment
 
 - **Working directory:** `/workspace` (mounted to your local project)
-- **Python path:** Configured to use `.venv/bin/python`
+- **Python path:** Managed by uv (typically `/root/.local/share/uv/pythons/`)
+- **R path:** `/usr/local/bin/R`
 - **Volumes:**
   - Cache volume for faster builds and package downloads
   - Virtual environment volume for persistence
@@ -74,6 +81,13 @@ The same versions are also referenced in:
 ### Run Python Code
 
 ```bash
+uv run python computation/your_script.py
+```
+
+Or activate the virtual environment:
+
+```bash
+source .venv/bin/activate
 python computation/your_script.py
 ```
 
@@ -124,11 +138,12 @@ See [R_PACKAGES.md](./R_PACKAGES.md) for detailed R package management.
 - Check Docker logs: `docker logs satp-dev`
 - Rebuild the container: `Dev Containers: Rebuild Container`
 
-### Python package installation fails
+### Python sync fails
 
-- Run `uv sync` manually: Open terminal in VS Code and run the command
-- Check internet connection (some packages pull from GitHub)
-- Clear cache if needed: `docker volume prune`
+- Run `uv sync` manually in the container terminal
+- Check `pyproject.toml` for syntax errors
+- Check internet connection (uv downloads Python from astral.sh)
+- Clear uv cache: `uv cache clean`
 
 ### R package restoration fails
 
@@ -140,17 +155,18 @@ See [R_PACKAGES.md](./R_PACKAGES.md) for detailed R package management.
 ### R integration issues
 
 - Verify rpy2 loaded: `python -c "import rpy2; print(rpy2.__version__)"`
-- Check R path: `which R` (should show `/usr/bin/R`)
+- Check R path: `which R` (should show `/usr/local/bin/R`)
 - Check renv status: `Rscript -e 'renv::status()'`
+- Check R version: `R --version`
 
 ### Jupyter kernel connection issues
 
 - Restart VS Code Jupyter kernel: `Shift+Cmd+P` → "Jupyter: Restart Kernel"
 - Reload VS Code window: `Cmd+R` (Mac) or `F5` (Windows/Linux)
 
-### Version mismatch after changing Python/R versions
+### Version mismatch after changing R version
 
-If you change versions in `devcontainer.json`, you need a clean rebuild:
+If you change the R version in `docker-compose.yaml`, rebuild completely:
 1. `Dev Containers: Remove Container`
 2. `Dev Containers: Open in Container` (will rebuild fresh)
 
@@ -181,6 +197,8 @@ Press `Shift+Cmd+P` → `Dev Containers: Rebuild Container` (cleans and rebuilds
 
 ## Performance Notes
 
+- Uses Rocker pre-compiled R binaries (fast builds, no compilation)
+- uv downloads and caches Python versions efficiently
 - The `.venv` is stored in a named volume for faster I/O on Docker Desktop
 - R packages cached in `renv-cache` volume for speedy rebuilds
 - Python cache directory persists between builds to speed up package downloads
@@ -192,6 +210,7 @@ Press `Shift+Cmd+P` → `Dev Containers: Rebuild Container` (cleans and rebuilds
 - **Dev Containers Docs:** https://code.visualstudio.com/docs/devcontainers/containers
 - **Docker Compose:** https://docs.docker.com/compose/
 - **uv Package Manager:** https://docs.astral.sh/uv/
+- **Rocker Project:** https://rocker-project.org/
 - **renv Documentation:** https://rstudio.github.io/renv/
 - **pak (R package installer):** https://pak.r-lib.org/
 - **Quarto:** https://quarto.org/docs/
