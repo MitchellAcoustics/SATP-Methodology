@@ -8,7 +8,8 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     RENV_PATHS_CACHE=/home/rstudio/.cache/R/renv \
     RENV_CONFIG_PAK_ENABLED=TRUE \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    LD_LIBRARY_PATH=/usr/local/lib/R/lib:$LD_LIBRARY_PATH
 
 # Install Python, R dev libs, and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
