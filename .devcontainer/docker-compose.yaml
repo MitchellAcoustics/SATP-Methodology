@@ -1,0 +1,47 @@
+services:
+  satp-dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        R_VERSION: "4.4.2"
+    image: satp-methodology:devcontainer
+    container_name: satp-dev
+    working_dir: /workspace
+    command: sleep infinity
+
+    volumes:
+      # Workspace
+      - ..:/workspace:cached
+      # Named volumes for performance
+      - satp-cache:/home/vscode/.cache
+      - satp-venv:/workspace/.venv
+      # renv and pak caches for faster package downloads
+      - renv-cache:/home/vscode/.cache/R/renv
+      - pak-cache:/home/vscode/.cache/R/pkgcache
+
+    environment:
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      TZ: UTC
+      # Enable renv cache and pak for faster installation
+      RENV_PATHS_CACHE: /home/vscode/.cache/R/renv
+      RENV_CONFIG_PAK_ENABLED: "TRUE"
+      # Use copy mode for uv (volumes don't support hardlinks)
+      UV_LINK_MODE: copy
+
+    user: vscode
+    stdin_open: true
+    tty: true
+    networks:
+      - satp
+
+networks:
+  satp:
+    driver: bridge
+
+volumes:
+  satp-cache:
+  satp-venv:
+  renv-cache:
+  pak-cache:
