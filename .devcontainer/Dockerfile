@@ -6,7 +6,7 @@ FROM rocker/r-ver:${R_VERSION}
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    RENV_PATHS_CACHE=/home/vscode/.cache/R/renv \
+    # RENV_PATHS_CACHE=/home/vscode/.cache/R/renv \
     RENV_CONFIG_PAK_ENABLED=TRUE \
     UV_LINK_MODE=copy \
     LD_LIBRARY_PATH=/usr/local/lib/R/lib:$LD_LIBRARY_PATH
@@ -58,7 +58,7 @@ RUN mkdir -p /usr/local/lib/R/site-library && \
     chmod 2777 /usr/lib/R/site-library
 
 # Install renv system-wide for bootstrap
-RUN Rscript -e "install.packages('renv', repos='https://cloud.r-project.org')"
+# RUN Rscript -e "install.packages('renv', repos='https://cloud.r-project.org')"
 
 WORKDIR /workspace
 

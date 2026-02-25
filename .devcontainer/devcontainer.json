@@ -1,6 +1,6 @@
 {
     "name": "SATP Methodology - Dev Container",
-    "dockerComposeFile": "docker-compose.yaml",
+    "dockerComposeFile": ["docker-compose.yaml"],
     "service": "satp-dev",
     "remoteUser": "vscode",
     "workspaceFolder": "/workspace",
@@ -74,7 +74,7 @@
         "RENV_CONFIG_PAK_ENABLED": "TRUE",
         "UV_LINK_MODE": "copy"
     },
-    "postCreateCommand": "uv sync && Rscript -e 'renv::restore(prompt=FALSE)' && Rscript -e 'tinytex::install_tinytex()' && quarto check",
+    "postCreateCommand": "bash .devcontainer/init-env.sh",
     "remoteEnv": {
         "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
     }
