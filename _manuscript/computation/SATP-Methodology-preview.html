@@ -158,7 +158,7 @@
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-c2705529bd20fea3e817cf23fc06411c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3b0b380dbb7245cdf4acf9b48aa5b681.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
      <script async="" src="https://hypothes.is/embed.js"></script>
 <script>
   window.document.addEventListener("DOMContentLoaded", function (_event) {
@@ -218,7 +218,7 @@
 </div>
 <main class="content quarto-banner-title-block" id="quarto-document-content">      
 
-       <div class="cell-container"><div class="cell-decorator"><pre>In [1]:</pre></div><div id="fb0f9604" class="cell" data-execution_count="1">
+       <div class="cell-container"><div class="cell-decorator"><pre>In [13]:</pre></div><div id="fb0f9604" class="cell" data-execution_count="13">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xarray <span class="im">as</span> xr</span>
@@ -241,23 +241,17 @@
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>satp <span class="op">=</span> sspy.databases.satp.load_zenodo()</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>satp.drop(columns<span class="op">=</span>[<span class="st">"Gender"</span>, <span class="st">"Age"</span>, <span class="st">"sequence_id"</span>, <span class="st">"loud"</span>], inplace<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>/Users/mitch/Documents/GitHub/SATP-Methodology/.venv/lib/python3.12/site-packages/soundscapy/__init__.py:94: UserWarning: The SPI analysis module is experimental. Use with caution.
-  from soundscapy import spi
-/Users/mitch/Documents/GitHub/SATP-Methodology/.venv/lib/python3.12/site-packages/soundscapy/__init__.py:118: UserWarning: The SATP analysis module is experimental. Use with caution.
-  from soundscapy import satp</code></pre>
-</div>
 </div></div>
-<div class="cell-container"><div class="cell-decorator"><pre>In [2]:</pre></div><div id="2776e479" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rpy2.robjects <span class="im">import</span> conversion, default_converter, numpy2ri, pandas2ri</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> conversion.localconverter(</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    default_converter <span class="op">+</span> numpy2ri.converter <span class="op">+</span> pandas2ri.converter</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>):</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    satp_test <span class="op">=</span> SATP(satp.query(<span class="st">"Language=='eng'"</span>), language<span class="op">=</span><span class="st">"eng"</span>, datasource<span class="op">=</span><span class="st">"UCL"</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    satp_test.run()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-container"><div class="cell-decorator"><pre>In [14]:</pre></div><div id="2776e479" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> rpy2.robjects <span class="im">import</span> conversion, default_converter, numpy2ri, pandas2ri</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> conversion.localconverter(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    default_converter <span class="op">+</span> numpy2ri.converter <span class="op">+</span> pandas2ri.converter</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    satp_test <span class="op">=</span> SATP(satp.query(<span class="st">"Language=='eng'"</span>), language<span class="op">=</span><span class="st">"eng"</span>, datasource<span class="op">=</span><span class="st">"UCL"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    satp_test.run()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Date: Tue Feb 24 20:15:59 2026 
+<pre><code>Date: Mon Feb 23 22:38:08 2026 
 Data: Circumplex Estimation 
 Model:Unconstrained model 
 Reference variable at 0 degree: PAQ1 
@@ -479,10 +473,10 @@ PAQ2 0.97 )
                        b 0    b 1    b 2    b 3
 Estimates of Betas: 0.0165 0.9124 0.0269 0.0442
 ----------------------------------------------------
- CPU Time for optimization 0.304 sec. ( 0 min.)
+ CPU Time for optimization 0.273 sec. ( 0 min.)
                                
                                
-Date: Tue Feb 24 20:15:59 2026 
+Date: Mon Feb 23 22:38:09 2026 
 Data: Circumplex Estimation 
 Model:Equal spacing 
 Reference variable at 0 degree: PAQ1 
@@ -529,20 +523,20 @@ iter   13 value 0.945618
 iter   14 value 0.850926
 iter   15 value 0.708741
 iter   16 value 0.670747
-iter   17 value 0.647070
-iter   18 value 0.642504
-iter   19 value 0.638796
-iter   20 value 0.629155</code></pre>
+iter   17 value 0.647070</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_43292/2099896382.py:7: UserWarning: unconstrained raised 1 validation error for CircE
+<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_67446/2099896382.py:7: UserWarning: unconstrained raised 1 validation error for CircE
 _raw_bfgs_fit
   Input should be an instance of ListVector [type=is_instance_of, input_value=o{'coeff':         Parame...0.95169494], 'm': [3], }, input_type=OrdDict]
     For further information visit https://errors.pydantic.dev/2.12/v/is_instance_of
   satp_test.run()</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>iter   21 value 0.624269
+<pre><code>iter   18 value 0.642504
+iter   19 value 0.638796
+iter   20 value 0.629155
+iter   21 value 0.624269
 iter   22 value 0.619377
 iter   23 value 0.612546
 iter   24 value 0.605718
@@ -702,10 +696,10 @@ PAQ8 0.99 )
                        b 0    b 1    b 2    b 3
 Estimates of Betas: 0.0246 0.9128 0.0301 0.0324
 ----------------------------------------------------
- CPU Time for optimization 0.244 sec. ( 0 min.)
+ CPU Time for optimization 0.222 sec. ( 0 min.)
                                
                                
-Date: Tue Feb 24 20:16:00 2026 
+Date: Mon Feb 23 22:38:09 2026 
 Data: Circumplex Estimation 
 Model:Constrained model: equal spacing and equal radius 
 Reference variable at 0 degree: PAQ1 
@@ -752,8 +746,17 @@ iter   20 value 0.974554
 iter   21 value 0.974514
 iter   22 value 0.974506
 iter   23 value 0.974503
-iter   24 value 0.974501
-iter   25 value 0.974500
+iter   24 value 0.974501</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_67446/2099896382.py:7: UserWarning: equal_ang raised 1 validation error for CircE
+_raw_bfgs_fit
+  Input should be an instance of ListVector [type=is_instance_of, input_value=o{'coeff':         Parame...0.91025015], 'm': [3], }, input_type=OrdDict]
+    For further information visit https://errors.pydantic.dev/2.12/v/is_instance_of
+  satp_test.run()</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>iter   25 value 0.974500
 iter   26 value 0.974500
 iter   27 value 0.974499
 iter   28 value 0.974499
@@ -762,17 +765,7 @@ final  value 0.974499
 converged
 
 Final gradient value:
- [1] -8.297815e-04</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_43292/2099896382.py:7: UserWarning: equal_ang raised 1 validation error for CircE
-_raw_bfgs_fit
-  Input should be an instance of ListVector [type=is_instance_of, input_value=o{'coeff':         Parame...0.91025015], 'm': [3], }, input_type=OrdDict]
-    For further information visit https://errors.pydantic.dev/2.12/v/is_instance_of
-  satp_test.run()</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  1.488290e-03 -4.354332e-03 -6.169050e-04  1.003339e-03
+ [1] -8.297815e-04  1.488290e-03 -4.354332e-03 -6.169050e-04  1.003339e-03
  [6] -2.970932e-05  5.429004e-04 -6.495741e-04  2.646991e-04 -5.526590e-04
 [11]  1.800305e-04 -8.061905e-04
 
@@ -881,10 +874,10 @@ PAQ8 0.97 )
                       b 0    b 1    b 2    b 3
 Estimates of Betas: 0.019 0.9035 0.0333 0.0443
 ----------------------------------------------------
- CPU Time for optimization 0.107 sec. ( 0 min.)
+ CPU Time for optimization 0.117 sec. ( 0 min.)
                                
                                
-Date: Tue Feb 24 20:16:00 2026 
+Date: Mon Feb 23 22:38:10 2026 
 Data: Circumplex Estimation 
 Model:Equal radius 
 Reference variable at 0 degree: PAQ1 
@@ -935,19 +928,19 @@ iter   17 value 0.419224
 iter   18 value 0.418973
 iter   19 value 0.418741
 iter   20 value 0.418717
-iter   21 value 0.418689</code></pre>
+iter   21 value 0.418689
+iter   22 value 0.418674
+iter   23 value 0.418651</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_43292/2099896382.py:7: UserWarning: equal_com raised 1 validation error for CircE
+<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_67446/2099896382.py:7: UserWarning: equal_com raised 1 validation error for CircE
 _raw_bfgs_fit
   Input should be an instance of ListVector [type=is_instance_of, input_value=o{'coeff':         Parame...0.90829556], 'm': [3], }, input_type=OrdDict]
     For further information visit https://errors.pydantic.dev/2.12/v/is_instance_of
   satp_test.run()</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>iter   22 value 0.418674
-iter   23 value 0.418651
-iter   24 value 0.418647
+<pre><code>iter   24 value 0.418647
 iter   25 value 0.418645
 iter   26 value 0.418644
 iter   27 value 0.418642
@@ -1082,7 +1075,7 @@ Estimates of Betas: 0.0188 0.874 0.0422 0.065
                                </code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_43292/2099896382.py:7: UserWarning: circumplex raised 1 validation error for CircE
+<pre><code>/var/folders/6t/7h8wn9n92w5f24ml_bkwck9m0000gn/T/ipykernel_67446/2099896382.py:7: UserWarning: circumplex raised 1 validation error for CircE
 _raw_bfgs_fit
   Input should be an instance of ListVector [type=is_instance_of, input_value=o{'coeff':         Parame...0.93274411], 'm': [3], }, input_type=OrdDict]
     For further information visit https://errors.pydantic.dev/2.12/v/is_instance_of
@@ -1090,7 +1083,7 @@ _raw_bfgs_fit
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [4]:</pre></div><div id="cf4932c4" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>satp_test._errors</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>satp_test._errors</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>{&lt;CircModelE.UNCONSTRAINED: 'unconstrained'&gt;: 1 validation error for CircE
  _raw_bfgs_fit
@@ -1111,43 +1104,43 @@ _raw_bfgs_fit
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [12]:</pre></div><div id="be227f18" class="cell" data-execution_count="12">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> soundscapy.satp <span class="im">import</span> CircModelE, CircE, ModelType</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> soundscapy.r_wrapper <span class="im">as</span> sspyr</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> soundscapy.r_wrapper._circe_wrapper <span class="im">import</span> _stats_package</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rpy2.robjects <span class="im">as</span> ro</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>data_cor <span class="op">=</span> satp_test.data_corr</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> data_cor.shape[<span class="dv">0</span>]</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>model_type <span class="op">=</span> ModelType(name<span class="op">=</span>CircModelE.UNCONSTRAINED)</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>bfgs_model <span class="op">=</span> sspyr.bfgs(</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    data_cor<span class="op">=</span>data_cor,</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    scales<span class="op">=</span>SCALES,</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    m_val<span class="op">=</span><span class="dv">3</span>,</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    equal_ang<span class="op">=</span>model_type.equal_ang,</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    equal_com<span class="op">=</span>model_type.equal_com,</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> conversion.localconverter(</span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    default_converter <span class="op">+</span> numpy2ri.converter <span class="op">+</span> pandas2ri.converter</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>):</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    py_res <span class="op">=</span> {</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>        key.lower(): ro.conversion.get_conversion().rpy2py(val)</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> key, val <span class="kw">in</span> bfgs_model.items()</span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    py_res[<span class="st">"p"</span>] <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> _stats_package.pchisq(py_res[<span class="st">"chisq"</span>], py_res[<span class="st">"dfnull"</span>]).item()</span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co">## from_bfgs</span></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>fit_stats <span class="op">=</span> sspyr.extract_bfgs_fit(bfgs_model)</span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>polar_angles <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> model_type <span class="kw">in</span> (CircModelE.UNCONSTRAINED, CircModelE.EQUAL_COM):</span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    polar_angles <span class="op">=</span> pd.DataFrame(fit_stats.get(<span class="st">"polar_angles"</span>, <span class="va">None</span>)).T</span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># CircE.compute_bfgs_fit(</span></span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     satp_test.data_corr,</span></span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     satp_test.datasource,</span></span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     satp_test.language,</span></span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     CircModelE.UNCONSTRAINED,</span></span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># )</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> soundscapy.satp <span class="im">import</span> CircModelE, CircE, ModelType</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> soundscapy.r_wrapper <span class="im">as</span> sspyr</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> soundscapy.r_wrapper._circe_wrapper <span class="im">import</span> _stats_package</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rpy2.robjects <span class="im">as</span> ro</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>data_cor <span class="op">=</span> satp_test.data_corr</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> data_cor.shape[<span class="dv">0</span>]</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>model_type <span class="op">=</span> ModelType(name<span class="op">=</span>CircModelE.UNCONSTRAINED)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>bfgs_model <span class="op">=</span> sspyr.bfgs(</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    data_cor<span class="op">=</span>data_cor,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    scales<span class="op">=</span>SCALES,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    m_val<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    equal_ang<span class="op">=</span>model_type.equal_ang,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    equal_com<span class="op">=</span>model_type.equal_com,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> conversion.localconverter(</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    default_converter <span class="op">+</span> numpy2ri.converter <span class="op">+</span> pandas2ri.converter</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    py_res <span class="op">=</span> {</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        key.lower(): ro.conversion.get_conversion().rpy2py(val)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> key, val <span class="kw">in</span> bfgs_model.items()</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    py_res[<span class="st">"p"</span>] <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> _stats_package.pchisq(py_res[<span class="st">"chisq"</span>], py_res[<span class="st">"dfnull"</span>]).item()</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="co">## from_bfgs</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>fit_stats <span class="op">=</span> sspyr.extract_bfgs_fit(bfgs_model)</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>polar_angles <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> model_type <span class="kw">in</span> (CircModelE.UNCONSTRAINED, CircModelE.EQUAL_COM):</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    polar_angles <span class="op">=</span> pd.DataFrame(fit_stats.get(<span class="st">"polar_angles"</span>, <span class="va">None</span>)).T</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># CircE.compute_bfgs_fit(</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     satp_test.data_corr,</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     satp_test.datasource,</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     satp_test.language,</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">#     CircModelE.UNCONSTRAINED,</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># )</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
 <div class="ansi-escaped-output">
 <pre><span class="ansi-red-fg">---------------------------------------------------------------------------</span>
@@ -1221,7 +1214,7 @@ _raw_bfgs_fit
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [11]:</pre></div><div id="b71b8e5e" class="cell" data-execution_count="11">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>bfgs_model</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>bfgs_model</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="11">
 <pre><code>o{'coeff':         Parameters  Stand. Errors
 PAQ1       0.00000       0.000000
@@ -1356,7 +1349,7 @@ PAQ8       23.0   -1.0   47.0, 'chisq': [0.44655632], 'RMSEA': [0.], 'RMSEA.U': 
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [6]:</pre></div><div id="cd11b58b" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>py_res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>py_res</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <pre><code>{'coeff':         Parameters  Stand. Errors
  PAQ1       0.00000       0.000000
@@ -1550,7 +1543,7 @@ PAQ8       23.0   -1.0   47.0, 'chisq': [0.44655632], 'RMSEA': [0.], 'RMSEA.U': 
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [9]:</pre></div><div id="14e4d11b" class="cell" data-execution_count="9">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>fit_stats</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fit_stats</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="9">
 <pre><code>{'coeff':         Parameters  Stand. Errors
  PAQ1       0.00000       0.000000
@@ -1744,7 +1737,7 @@ PAQ8       23.0   -1.0   47.0, 'chisq': [0.44655632], 'RMSEA': [0.], 'RMSEA.U': 
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [13]:</pre></div><div id="edfa09bb" class="cell" data-execution_count="13">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fit_stats <span class="op">=</span> sspyr.extract_bfgs_fit(bfgs_model)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>fit_stats <span class="op">=</span> sspyr.extract_bfgs_fit(bfgs_model)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
 <div class="ansi-escaped-output">
 <pre><span class="ansi-red-fg">---------------------------------------------------------------------------</span>
@@ -1764,7 +1757,7 @@ PAQ8       23.0   -1.0   47.0, 'chisq': [0.44655632], 'RMSEA': [0.], 'RMSEA.U': 
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [3]:</pre></div><div id="57d1160c" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>satp_test.model_results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>satp_test.model_results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>{&lt;CircModelE.UNCONSTRAINED: 'unconstrained'&gt;: None,
  &lt;CircModelE.EQUAL_COM: 'equal_com'&gt;: None,
@@ -1773,17 +1766,17 @@ PAQ8       23.0   -1.0   47.0, 'chisq': [0.44655632], 'RMSEA': [0.], 'RMSEA.U': 
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [2]:</pre></div><div id="20a2132c" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>multiindex <span class="op">=</span> pd.MultiIndex.from_frame(satp[INDEX_COLS])</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>satp.loc[multiindex.duplicated(), <span class="st">"Participant"</span>] <span class="op">=</span> <span class="st">"FER_5M04a"</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>multiindex <span class="op">=</span> pd.MultiIndex.from_frame(satp[INDEX_COLS])</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>satp_multi <span class="op">=</span> (</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    satp.set_index(multiindex).drop(columns<span class="op">=</span>INDEX_COLS).dropna(subset<span class="op">=</span>scm.scale_abbrevs)</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>multiindex <span class="op">=</span> pd.MultiIndex.from_frame(satp[INDEX_COLS])</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>satp.loc[multiindex.duplicated(), <span class="st">"Participant"</span>] <span class="op">=</span> <span class="st">"FER_5M04a"</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>multiindex <span class="op">=</span> pd.MultiIndex.from_frame(satp[INDEX_COLS])</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>satp_multi <span class="op">=</span> (</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    satp.set_index(multiindex).drop(columns<span class="op">=</span>INDEX_COLS).dropna(subset<span class="op">=</span>scm.scale_abbrevs)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [3]:</pre></div><div id="7a080e84" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>satp_xr <span class="op">=</span> satp_multi.to_xarray()</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>satp_xr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>satp_xr <span class="op">=</span> satp_multi.to_xarray()</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>satp_xr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <div><svg style="position: absolute; width: 0; height: 0; overflow: hidden">
 <defs>
@@ -2676,10 +2669,10 @@ Data variables:
 
 </div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [4]:</pre></div><div id="2a840af8" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>satp_xr <span class="op">=</span> satp_xr <span class="op">-</span> satp_xr.groupby(<span class="st">"Participant"</span>).mean(</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    skipna<span class="op">=</span><span class="va">True</span>, dim<span class="op">=</span>[<span class="st">"Language"</span>, <span class="st">"Institution"</span>, <span class="st">"Recording"</span>]</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>satp_xr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>satp_xr <span class="op">=</span> satp_xr <span class="op">-</span> satp_xr.groupby(<span class="st">"Participant"</span>).mean(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    skipna<span class="op">=</span><span class="va">True</span>, dim<span class="op">=</span>[<span class="st">"Language"</span>, <span class="st">"Institution"</span>, <span class="st">"Recording"</span>]</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>satp_xr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div><svg style="position: absolute; width: 0; height: 0; overflow: hidden">
 <defs>
@@ -3574,33 +3567,33 @@ Data variables:
 </section>
 </div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [5]:</pre></div><div id="a618f5d7" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_list_of_long_groupdfs(dataset: xr.Dataset, group: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[pd.DataFrame]:</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    data_vars <span class="op">=</span> <span class="bu">list</span>(dataset.data_vars)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    group_labels: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> <span class="bu">list</span>(dataset[group].values)</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    group_dfs: <span class="bu">list</span>[pd.DataFrame] <span class="op">=</span> [</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        dataset.sel({group: label}).to_dataframe().dropna().reset_index()[data_vars]</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> label <span class="kw">in</span> group_labels</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    ]</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> group_dfs</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_group_labels(dataset: xr.Dataset, group: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]:</span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(dataset[group].values)</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> scm_rthor_test(</span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    dataset: xr.Dataset, group: <span class="bu">str</span>, <span class="op">*</span>, print_results<span class="op">=</span><span class="va">True</span></span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> pd.DataFrame:</span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    <span class="im">import</span> rthor</span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    group_dfs <span class="op">=</span> get_list_of_long_groupdfs(dataset, group)</span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    group_labels <span class="op">=</span> get_group_labels(dataset, group)</span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rthor.test(</span>
-<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>        group_dfs, order<span class="op">=</span><span class="st">"circular8"</span>, labels<span class="op">=</span>group_labels, print_results<span class="op">=</span>print_results</span>
-<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_list_of_long_groupdfs(dataset: xr.Dataset, group: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[pd.DataFrame]:</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    data_vars <span class="op">=</span> <span class="bu">list</span>(dataset.data_vars)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    group_labels: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> <span class="bu">list</span>(dataset[group].values)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    group_dfs: <span class="bu">list</span>[pd.DataFrame] <span class="op">=</span> [</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>        dataset.sel({group: label}).to_dataframe().dropna().reset_index()[data_vars]</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> label <span class="kw">in</span> group_labels</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> group_dfs</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_group_labels(dataset: xr.Dataset, group: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]:</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(dataset[group].values)</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> scm_rthor_test(</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    dataset: xr.Dataset, group: <span class="bu">str</span>, <span class="op">*</span>, print_results<span class="op">=</span><span class="va">True</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    <span class="im">import</span> rthor</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    group_dfs <span class="op">=</span> get_list_of_long_groupdfs(dataset, group)</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    group_labels <span class="op">=</span> get_group_labels(dataset, group)</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rthor.test(</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>        group_dfs, order<span class="op">=</span><span class="st">"circular8"</span>, labels<span class="op">=</span>group_labels, print_results<span class="op">=</span>print_results</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [6]:</pre></div><div id="2cf23001" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>institution_rthor <span class="op">=</span> scm_rthor_test(satp_xr, <span class="st">"Institution"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>institution_rthor <span class="op">=</span> scm_rthor_test(satp_xr, <span class="st">"Institution"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-style: italic">                                   </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold; font-style: italic">RTHOR Test Results</span><span style="font-style: italic">                                   </span>
 <span style="font-style: italic">           </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-style: italic">19 matrices • 8 variables • 288 predictions • 40,320 permutations</span><span style="font-style: italic">            </span>
@@ -3632,7 +3625,7 @@ Data variables:
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [7]:</pre></div><div id="d39c4a80" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>language_rthor <span class="op">=</span> scm_rthor_test(satp_xr, <span class="st">"Language"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>language_rthor <span class="op">=</span> scm_rthor_test(satp_xr, <span class="st">"Language"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-style: italic">                                   </span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold; font-style: italic">RTHOR Test Results</span><span style="font-style: italic">                                   </span>
 <span style="font-style: italic">           </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-style: italic">18 matrices • 8 variables • 288 predictions • 40,320 permutations</span><span style="font-style: italic">            </span>
@@ -3668,7 +3661,7 @@ Data variables:
 </section>
 </div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [8]:</pre></div><div id="e9ed50bc" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> soundscapy.satp <span class="im">import</span> SATP</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> soundscapy.satp <span class="im">import</span> SATP</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
 <div class="ansi-escaped-output">
 <pre><span class="ansi-red-fg">---------------------------------------------------------------------------</span>
@@ -3776,7 +3769,7 @@ During handling of the above exception, another exception occurred:
 </div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [4]:</pre></div><div id="74327dff" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
 <div class="ansi-escaped-output">
 <pre><span class="ansi-red-fg">---------------------------------------------------------------------------</span>
