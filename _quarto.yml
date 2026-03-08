@@ -4,7 +4,7 @@ project:
 manuscript:
   article: index.qmd
   notebooks: 
-    - notebook: computation/SATP-Methodology.ipynb
+    - notebook: computation/SATP-Methodology.qmd
       title: "SATP Methodology"
 
 number-sections: true
@@ -14,15 +14,22 @@ format:
     comments:
       hypothesis: true
     theme: cosmo
-  nature-pdf: default
+  academic-typst: 
+    section-numbering: "1.1.1"
+    bibliographystyle: "chicago-author-date"
+    include-in-header: 
+      - text: '#import "@preview/mitex:0.2.4": *'
   docx: default
   jats: default
 
   # (other formats)
   # pdf: default
 
+keywords:
+  - Soundscape
+
+bibliography: references.bib
+
 execute:
-  freeze: true
-
-
-
+  freeze: auto
+  cache: true

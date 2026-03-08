@@ -1,0 +1,494 @@
+---
+title: "SATP Circumplex Validation — Computation"
+description: |
+  Computation for Chapter 4: Procedure for testing and adjusting translations of the
+  Soundscape (quasi-)Circumplex Model. Runs the four-step validation procedure on the
+  SATP v1.5 dataset and produces all tables and figures for the chapter.
+date: last-modified
+jupyter: python3
+---
+
+## Setup
+
+```{python}
+# | output: false
+
+import warnings
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+import rthor
+import soundscapy as sspy
+from soundscapy.satp import fit_circe, CircEResults
+import soundscapy.r_wrapper as sspyr
+from circumplex import ssm_analyze
+from sklearn.metrics.pairwise import cosine_similarity
+from procrustes import rotational
+
+warnings.filterwarnings("ignore", category=UserWarning)
+
+# Initialise R session eagerly before any parallel work (avoids rpy2 threading issues)
+sspyr.get_r_session()
+
+# Paths — this file lives in computation/, project root is one level up
+COMP_DIR = Path.cwd()
+PROJECT_DIR = COMP_DIR.parent if COMP_DIR.name == "computation" else COMP_DIR
+DATA_DIR = PROJECT_DIR / "data"
+OUTPUT_DIR = PROJECT_DIR / "outputs"
+FIGURE_DIR = PROJECT_DIR / "figures"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+FIGURE_DIR.mkdir(parents=True, exist_ok=True)
+
+# Fix rpy2 contextvars issue in Jupyter kernels: IPython runs each cell in an
+# isolated contextvars.Context, so converter_ctx values set in one cell are lost
+# in the next. The default converter_ctx value is "missingconverter" (a dummy
+# that raises NotImplementedError on use, silently caught by soundscapy).
+# Replace the ContextVar with one whose default is the real converter.
+import contextvars
+import rpy2.robjects as _ro
+from rpy2.robjects import conversion as _conv, pandas2ri as _p2ri, numpy2ri as _n2ri
+
+_conv.converter_ctx = contextvars.ContextVar(
+    "converter", default=_ro.default_converter + _n2ri.converter + _p2ri.converter
+)
+
+# SCM scale names and ideal equally-spaced angles
+scales = ["PAQ1", "PAQ2", "PAQ3", "PAQ4", "PAQ5", "PAQ6", "PAQ7", "PAQ8"]
+eq_angles = [0, 45, 90, 135, 180, 225, 270, 315]
+```
+
+## Load Data
+
+The SATP v1.5 dataset is loaded from the local data folder (also available from Zenodo).
+The LNC institution is excluded throughout, consistent with @Aletta2024Soundscape.
+
+```{python}
+# | output: false
+
+satp = pd.read_excel(DATA_DIR / "SATP Dataset v1.5.xlsx", na_values=["", "N/A"])
+satp = satp.rename(columns={"Participant": "participant"})
+satp = satp[satp["Institution"] != "LNC"].copy()
+languages = sorted(satp["Language"].unique())
+```
+
+```{python}
+print(f"Total rows (after LNC filter): {len(satp):,}")
+print(f"Languages ({len(languages)}): {languages}")
+```
+
+## Step 1: Circular Order Test
+
+Tracey's randomisation test of hypothesised order relations (RTHOR) tests whether the
+correlation matrix for each language is consistent with the expected circular ordering of
+the eight SCM scales. The Correspondence Index (CI) and its associated randomisation
+test p-value are reported. Criterion: CI > 0.70, p < 0.05 [@Gurtman2000Interpersonal].
+
+### Data Preparation: Ipsatization
+
+Before the circular order and SEM analyses, each participant's responses are
+grand-mean centred. The mean of all PAQ responses for a participant across all recordings
+and all scales is subtracted from every individual PAQ value. This removes between-person
+differences in overall response level without affecting within-person variation across
+scales or recordings.
+
+Grand-mean centring is applied internally by `fit_circe` when
+`center_by_participant=True` (the default). It is equivalent to:
+
+```python
+sspy.ipsatize(data, method="grand_mean", participant_col="participant")
+```
+
+The circular order test (RTHOR) operates on the raw (unipsatized) correlation matrices;
+ipsatization is applied only in the SEM step.
+
+```{python}
+# | label: tbl-circular-order
+# | tbl-cap: "Results of the circular order analysis for each language in SATP v1.5. CI = Hubert's Correspondence Index; p = randomisation test p-value (Tracey 1997). Languages with CI > 0.70 and p < 0.05 pass Step 1."
+
+matrices = [satp[scales].dropna()]
+labels = ["SATP"]
+for lang in languages:
+    matrices.append(satp[satp["Language"] == lang][scales].dropna())
+    labels.append(lang)
+
+rthor_results = rthor.test(matrices, order="circular8", labels=labels)
+rthor_results["pass"] = (rthor_results["ci"] > 0.70) & (rthor_results["p_value"] < 0.05)
+
+step1_df = (
+    rthor_results[rthor_results["label"] != "SATP"][["label", "ci", "p_value", "pass"]]
+    .copy()
+    .rename(columns={"label": "language"})
+)
+step1_df.to_csv(OUTPUT_DIR / "step1_circular_order.csv", index=False)
+step1_df[["language", "ci", "p_value", "pass"]].round(3)
+```
+
+```{python}
+#| output: false
+
+pass_step1 = step1_df[step1_df["pass"]]["language"].tolist()
+fail_step1 = step1_df[~step1_df["pass"]]["language"].tolist()
+
+satp_s2 = satp[satp["Language"].isin(pass_step1)].copy()
+```
+
+## Step 2: Browne's Circumplex SEM
+
+Browne's [-@Browne1992Circumplex] circular stochastic process model is fitted for each
+language using the CircE package [@Grassi2010CircE] via
+`soundscapy.satp.fit_circe`. Four model variants are tested:
+
+| Model | Angles | Communalities |
+|---|---|---|
+| `unconstrained` | Free | Free |
+| `equal_com` | Free | Equal |
+| `equal_ang` | Equal (45° spacing) | Free |
+| `circumplex` | Equal | Equal |
+
+The equal-communality model (`equal_com`) is of primary interest: it yields the adjusted
+angles used in subsequent steps while holding communalities equal across scales.
+
+::: {.callout-note}
+## Exclusion of RMSEA
+
+RMSEA is not included among the fit indices. It can be biased for circumplex models,
+where high correlations between adjacent variables inflate the statistic
+[@Rogoza2021three; @West2022Handbook].
+:::
+
+::: {.callout-note}
+## Numerical reproducibility
+
+Fit statistics are produced by BFGS optimisation over a non-convex surface. Minor
+numerical differences from the original R analysis may arise from different sessions
+converging to nearby equally-valid local optima. Degrees of freedom are structurally
+determined and match exactly.
+:::
+
+```{python}
+#| output: false
+
+results_frames: list[CircEResults] = []
+fit_errors: dict[str, Exception] = {}
+
+for lang in sorted(satp_s2["Language"].unique()):
+    lang_data = satp_s2[satp_s2["Language"] == lang].copy()
+    try:
+        results_frames.append(
+            fit_circe(lang_data, language=lang, datasource="SATP", errors="warn")
+        )
+    except Exception as e:
+        fit_errors[lang] = e
+
+full_table = pd.concat([r.table for r in results_frames], ignore_index=True)
+full_table.to_csv(OUTPUT_DIR / "sem-fit-ipsatized.csv", index=False)
+```
+
+```{python}
+#| output: false
+
+thresholds = {"CFI": 0.92, "GFI": 0.90, "SRMR": 0.08}
+sem_res = full_table.copy()
+
+sem_res["CFI_pass"] = sem_res["cfi"] >= thresholds["CFI"]
+sem_res["GFI_pass"] = sem_res["gfi"] >= thresholds["GFI"]
+sem_res["SRMR_pass"] = sem_res["srmr"] < thresholds["SRMR"]
+sem_res["Score"] = sem_res[["CFI_pass", "GFI_pass", "SRMR_pass"]].sum(axis=1).astype(int)
+sem_res["passing"] = np.where(sem_res["Score"] >= 3, "Pass", "Fail")
+
+pass_step2 = (
+    sem_res.loc[(sem_res["model"] == "equal_com") & (sem_res["passing"] == "Pass"), "language"]
+    .tolist()
+)
+fail_step2 = [l for l in pass_step1 if l not in pass_step2]
+
+ang_df = (
+    sem_res[sem_res["model"] == "equal_com"][["language"] + scales]
+    .set_index("language")
+)
+ang_dict = ang_df.T.to_dict(orient="list")
+ang_df.to_csv(OUTPUT_DIR / "adjusted_angles.csv")
+
+satp_s34 = satp[satp["Language"].isin(pass_step2)].copy()
+```
+
+### SEM Fit Results
+
+```{python}
+#| label: tbl-sem-results
+#| tbl-cap: "SEM fit results for the equal-communality quasi-circumplex model for each language passing Step 1. Thresholds: CFI ≥ 0.92, GFI ≥ 0.90, SRMR < 0.08. Score = number of thresholds met (maximum 3); Pass requires Score = 3."
+
+sem_scores = (
+    sem_res[["language", "model", "n", "m", "cfi", "gfi", "srmr", "Score", "passing"]]
+    .loc[sem_res["model"] == "equal_com"]
+    .sort_values("language")
+)
+sem_scores.to_csv(OUTPUT_DIR / "sem-scores.csv", index=False)
+sem_scores[["language", "n", "cfi", "gfi", "srmr", "Score", "passing"]].round(3)
+```
+
+### Adjusted Angles
+
+```{python}
+#| label: tbl-adjusted-angles
+#| tbl-cap: "Adjusted angles (degrees) derived from the equal-communality CircE model for each language passing Step 2. PAQ1 (Pleasant) is fixed at 0° as the reference. Remaining angles are freely estimated. All languages and their Step 2 failures are included for reference."
+
+ang_df.round(1)
+```
+
+## Steps 3 & 4: SSM Location and Congruence
+
+The Structural Summary Method [SSM; @Gurtman1994differentiating] locates each scale of
+the reference circumplex (full-dataset per-recording means across all languages) within
+each individual language's circumplex space. For each reference scale, an SSM profile is
+fitted using that scale's mean per recording correlated against each of the language's
+eight PAQ means per recording.
+
+**Step 3** assesses whether the SSM fit is sufficient for reliable location: R² > 0.80
+per scale [@Rogoza2021three].
+
+**Step 4** tests whether the empirically located positions are congruent with their
+theoretical positions. Congruence is measured via cosine similarity (Tucker's Congruence
+Coefficient) between the empirical (SSM-estimated) and theoretical unit-circle coordinate
+vectors. Threshold: cosine similarity > 0.90.
+
+```{python}
+#| output: false
+
+def congruence_cosine(data1, data2):
+    """Mean diagonal cosine similarity (Tucker's Congruence Coefficient)."""
+    sim = cosine_similarity(data1, data2)
+    vals = np.diag(sim)
+    return float(np.mean(vals)), vals
+
+
+def procrustes_sim(data1, data2):
+    """Rotational Procrustes similarity: 1 − squared Frobenius distance."""
+    res = rotational(data1, data2, translate=True, scale=True)
+    return float(1 - res.error)
+
+
+def prepare_matrices(ssm_results, target_angles=eq_angles):
+    """Build empirical (SSM x,y) and theoretical (unit circle) coordinate matrices."""
+    data2 = ssm_results[["x_est", "y_est"]].values
+    data1 = np.column_stack(
+        [np.cos(np.deg2rad(target_angles)), np.sin(np.deg2rad(target_angles))]
+    )
+    return data1, data2
+
+
+overall_means = (
+    satp_s34.groupby("Recording")[scales]
+    .mean()
+    .rename(columns={s: f"{s}_ref" for s in scales})
+    .reset_index()
+)
+ref_cols = [f"{s}_ref" for s in scales]
+lang_rec_means = satp_s34.groupby(["Language", "Recording"])[scales].mean().reset_index()
+
+
+def test_lang(lang, test_angles, target_angles=eq_angles):
+    lm = lang_rec_means[lang_rec_means["Language"] == lang][
+        ["Recording"] + list(scales)
+    ]
+    merged = lm.merge(overall_means, on="Recording")
+    result = ssm_analyze(
+        merged,
+        scales=list(scales),
+        angles=test_angles,
+        measures=ref_cols,
+        measures_labels=list(scales),
+        boots=2000,
+        seed=42,
+    )
+    d1, d2 = prepare_matrices(result.results, target_angles)
+    cong, _ = congruence_cosine(d1, d2)
+    pro = procrustes_sim(d1, d2)
+    r2s = result.results["fit_est"].tolist()
+    return result, cong, pro, r2s
+
+
+locating_eq = {}
+locating_corr = {}
+rows = []
+
+for lang in sorted(lang_rec_means["Language"].unique()):
+    r_eq, c_eq, p_eq, r2_eq = test_lang(lang, eq_angles)
+    locating_eq[lang] = (r_eq, c_eq, p_eq, r2_eq)
+
+    corr_ang = ang_dict.get(lang, eq_angles)
+    r_corr, c_corr, p_corr, r2_corr = test_lang(lang, corr_ang)
+    locating_corr[lang] = (r_corr, c_corr, p_corr, r2_corr)
+
+    rows.append({
+        "Language": lang,
+        "Eq Ang Cosine": round(c_eq, 4),
+        "Corr Ang Cosine": round(c_corr, 4),
+        "Eq Ang Procrustes": round(p_eq, 4),
+        "Corr Ang Procrustes": round(p_corr, 4),
+        **{f"R2_PAQ{i + 1}": round(r2_corr[i], 4) for i in range(8)},
+    })
+
+congruence_df = pd.DataFrame(rows)
+congruence_df.to_csv(OUTPUT_DIR / "step34_congruence.csv", index=False)
+```
+
+### Step 3: SSM Model Fit (R²)
+
+```{python}
+#| label: tbl-ssm-fit
+#| tbl-cap: "Step 3 SSM R² values per scale for each language, computed using adjusted angles. Values below 0.80 indicate the scale cannot be reliably located within the circumplex space."
+
+fit_results = pd.DataFrame.from_dict(
+    {lang: dict(zip(scales, locating_corr[lang][3])) for lang in locating_corr}
+).T
+fit_results.round(3)
+```
+
+### Step 4: Congruence
+
+```{python}
+#| label: tbl-congruence
+#| tbl-cap: "Step 4 congruence results with equal (45°) and adjusted angles. Cosine = Tucker's Congruence Coefficient (mean diagonal cosine similarity); Procrustes = rotational Procrustes similarity (1 − error). Threshold: cosine > 0.90 with adjusted angles."
+
+congruence_df[
+    ["Language", "Eq Ang Cosine", "Corr Ang Cosine", "Eq Ang Procrustes", "Corr Ang Procrustes"]
+].round(3)
+```
+
+## Confidence Tier Classification
+
+Languages are assigned a three-tier confidence level following the definitions in
+@Aletta2024Soundscape. The tier system is applied to all languages in the full dataset,
+including those excluded at earlier steps.
+
+- **Low**: fails Step 1 — the circular ordering of scales is not maintained
+- **Medium**: passes Step 1 but fails Step 2 (quasi-circumplex structure not confirmed);
+  *or* passes Steps 1 and 2 but fails Step 3 or 4 (adjusted angles do not achieve
+  sufficient congruence)
+- **High**: passes all four steps with adjusted angles applied
+
+```{python}
+#| label: tbl-confidence-tiers
+#| tbl-cap: "Confidence tier assignment for all 22 languages in SATP v1.5. CI = Step 1 Correspondence Index; Score = Step 2 SEM fit score (max 3); Min R² = minimum SSM R² across scales (Step 3); Cosine = Step 4 cosine congruence with adjusted angles."
+
+tier_rows = []
+for lang in languages:
+    s1 = lang in pass_step1
+    s2 = lang in pass_step2 if s1 else False
+
+    row = congruence_df[congruence_df["Language"] == lang]
+    s3_min_r2 = (
+        float(row[[f"R2_PAQ{i + 1}" for i in range(8)]].min(axis=1).iloc[0])
+        if not row.empty else None
+    )
+    s3 = (s3_min_r2 is not None and s3_min_r2 > 0.80) if s2 else False
+    s4_cosine = float(row["Corr Ang Cosine"].iloc[0]) if not row.empty else None
+    s4 = (s4_cosine is not None and s4_cosine > 0.90) if s2 else False
+
+    # Tier definition aligned with Aletta et al. (2024):
+    # Low    = fail Step 1 (circular ordering not maintained)
+    # Medium = pass Step 1, fail Step 2 (quasi-circumplex not confirmed)
+    #        OR pass Steps 1+2 but fail Step 3/4 (adjusted angles insufficient)
+    # High   = pass all four steps
+    if not s1:
+        tier = "Low"
+    elif not s2:
+        tier = "Medium"
+    elif s3 and s4:
+        tier = "High"
+    else:
+        tier = "Medium"
+
+    tier_rows.append({
+        "language": lang,
+        "step1_ci": step1_df[step1_df["language"] == lang]["ci"].iloc[0]
+            if lang in step1_df["language"].values else None,
+        "step1_pass": s1,
+        "step2_score": int(sem_scores[sem_scores["language"] == lang]["Score"].iloc[0])
+            if lang in sem_scores["language"].values else None,
+        "step2_pass": s2,
+        "step3_min_r2": s3_min_r2,
+        "step3_pass": s3,
+        "step4_cosine": s4_cosine,
+        "step4_procrustes": float(row["Corr Ang Procrustes"].iloc[0])
+            if not row.empty else None,
+        "step4_pass": s4,
+        "tier": tier,
+    })
+
+tiers_df = pd.DataFrame(tier_rows)
+tiers_df.to_csv(OUTPUT_DIR / "confidence_tiers.csv", index=False)
+tiers_df[["language", "step1_ci", "step2_score", "step3_min_r2", "step4_cosine", "tier"]].round(3)
+```
+
+## Figures
+
+### Mandarin (cmn): Equal vs Adjusted Angles {#sec-cmn-figures}
+
+```{python}
+#| label: fig-cmn-equal
+#| fig-cap: "Mandarin (cmn) circumplex with equal 45° angles. Points show SSM-estimated locations of each PAQ scale of the full reference dataset within the Mandarin circumplex space; arcs show 95% bootstrap confidence intervals."
+
+if "cmn" in locating_eq:
+    locating_eq["cmn"][0].plot_circle(angle_labels=list(scales), title="Mandarin — equal angles")
+    plt.savefig(FIGURE_DIR / "cmn_eq_angles.png", dpi=150, bbox_inches="tight")
+    plt.show()
+```
+
+```{python}
+#| label: fig-cmn-corrected
+#| fig-cap: "Mandarin (cmn) circumplex with adjusted angles from Step 2. Applying the adjusted angles shifts the scale positions to better align with their theoretical locations."
+
+if "cmn" in locating_corr:
+    locating_corr["cmn"][0].plot_circle(angle_labels=list(scales), title="Mandarin — corrected angles")
+    plt.savefig(FIGURE_DIR / "cmn_corr_angles.png", dpi=150, bbox_inches="tight")
+    plt.show()
+```
+
+### Cross-language Comparison: Recording W06 {#sec-w06-figure}
+
+```{python}
+#| label: fig-w06
+#| fig-cap: "Mean ISOPleasant–ISOEventful coordinates for recording W06, computed with adjusted angles for each High-confidence language. The adjusted ISO projection equations (adapted from ISO/TS 12913-3) weight each PAQ by the cosine and sine of its adjusted angle rather than the theoretical 45° spacing."
+
+high_langs = tiers_df[tiers_df["tier"] == "High"]["language"].tolist()
+
+if high_langs:
+    def adj_iso_pl(values, angles, scale=100):
+        num = sum(np.cos(np.deg2rad(a)) * v for a, v in zip(angles, values))
+        denom = scale / 2 * sum(abs(np.cos(np.deg2rad(a))) for a in angles)
+        return num / denom
+
+    def adj_iso_ev(values, angles, scale=100):
+        num = sum(np.sin(np.deg2rad(a)) * v for a, v in zip(angles, values))
+        denom = scale / 2 * sum(abs(np.sin(np.deg2rad(a))) for a in angles)
+        return num / denom
+
+    w06 = satp.query("Recording == 'W06' and Language in @high_langs")
+    res_rows = []
+    for lang in high_langs:
+        ld = w06[w06["Language"] == lang]
+        if ld.empty:
+            continue
+        ang = ang_dict.get(lang, eq_angles)
+        pl = ld.apply(lambda r: adj_iso_pl(r[scales].values, ang), axis=1).mean()
+        ev = ld.apply(lambda r: adj_iso_ev(r[scales].values, ang), axis=1).mean()
+        res_rows.append({"Language": lang, "ISOPleasant": pl, "ISOEventful": ev})
+
+    if res_rows:
+        w06_df = pd.DataFrame(res_rows)
+        fig, ax = plt.subplots(figsize=(7, 7))
+        sspy.plotting.scatter(
+            w06_df, hue="Language", s=80, title="W06 — adjusted angles", ax=ax
+        )
+        plt.savefig(FIGURE_DIR / "W06_comparison.png", dpi=150, bbox_inches="tight")
+        plt.show()
+```

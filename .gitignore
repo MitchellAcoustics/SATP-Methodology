@@ -1,4 +1,4 @@
-/.quarto/
+.quarto
 **/*.quarto_ipynb
 .venv
 **/__pycache__
@@ -12,3 +12,8 @@ sn-mathphys-ay.bst
 sn-mathphys-num.bst
 sn-nature.bst
 sn-vancouver.bst
+resources
+.jupyter_cache
+*_files
+_freeze
+/.quarto/
