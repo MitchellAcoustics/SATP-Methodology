@@ -1,31 +1,40 @@
 {
-    "cSpell.words": [
-        "Andreella",
-        "Axelsson",
-        "Bakhtiar",
-        "Berglund",
-        "communalities",
-        "Cutoff",
-        "Frobenius",
-        "Grassi",
-        "Gurtman",
-        "Guttman",
-        "iede",
-        "ipsatised",
-        "Moshona",
-        "Rogoza",
-        "SATP",
-        "Tarlao"
-    ],
-    "python-envs.pythonProjects": [],
-    "terminal.integrated.profiles.linux": {
-        "BashWithStartup": {
-            "path": "bash",
-            "args": [
-                "--init-file",
-                "./setup-r-lib.sh"
-            ]
-        }
-    },
-    "terminal.integrated.defaultProfile.linux": "BashWithStartup"
+  "cSpell.words": [
+    "Andreella",
+    "Axelsson",
+    "Bakhtiar",
+    "Berglund",
+    "communalities",
+    "Cutoff",
+    "Frobenius",
+    "Girard",
+    "Grassi",
+    "Gurtman",
+    "Guttman",
+    "iede",
+    "ipsatised",
+    "ipsatization",
+    "Moshona",
+    "Rogoza",
+    "rthor",
+    "SATP",
+    "sspy",
+    "Tarlao",
+    "tqdm"
+  ],
+  "python-envs.pythonProjects": [],
+  "terminal.integrated.profiles.linux": {
+    "BashWithStartup": {
+      "path": "bash",
+      "args": ["--init-file", "./setup-r-lib.sh"]
+    }
+  },
+  "terminal.integrated.defaultProfile.linux": "BashWithStartup",
+  "files.autoSaveWhenNoErrors": true,
+  "files.autoSave": "onFocusChange",
+  "files.autoSaveWorkspaceFilesOnly": true,
+  "workbench.iconTheme": "material-icon-theme",
+  "quarto.visualEditor.markdownWrap": "sentence",
+  "quarto.visualEditor.spellingDictionary": "en_GB",
+  "positron.r.quietMode": true
 }

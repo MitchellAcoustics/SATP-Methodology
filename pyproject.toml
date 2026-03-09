@@ -6,6 +6,7 @@ dependencies = [
     "circumplex>=0.3.0rc1",
     "ipykernel>=7.0.0a2",
     "jupyter-cache>=1.0.1",
+    "num2words>=0.5.14",
     "papermill>=2.6.0",
     # "pipefunc[all]>=0.88.0",
     "qc-procrustes>=1.1.2",
