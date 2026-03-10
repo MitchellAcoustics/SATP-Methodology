@@ -1,57 +1,5 @@
 ---
-title: Chapter 4 - Procedure for testing and adjusting translations of the Soundscape (quasi-)Circumplex Model
-author:
-  - name: Andrew Mitchell
-    email: andrew.mitchell.18@ucl.ac.uk
-    affiliations:
-        - id: ucl-iede
-          name: University College London
-          department: Institute for Environmental Design and Engineering
-          address: Central House, 14 Upper Woburn Place
-          city: London
-          state: UK
-          postal-code: WC1H 0NN
-    attributes:
-        corresponding: true
-    orcid: 0000-0003-0978-5046
-  - name: Francesco Aletta
-    email: f.aletta@ucl.ac.uk
-    orcid: 0000-0003-0351-3189
-    affiliations:
-        - ref: ucl-iede
-
-keywords:
-  - Soundscape
-
-format:
-  html:
-    comments:
-      hypothesis: true
-    theme: cosmo
-    code-fold: true
-    execute:
-      output: true
-      echo: true
-  academic-typst:
-    section-numbering: "1.1.1"
-    bibliographystyle: "chicago-author-date"
-    include-in-header:
-      - text: '#import "@preview/mitex:0.2.4": *'
-  docx: default
-  jats: default
-
-bibliography: references.bib
-
-filters:
-  - abstract-section
-
-execute:
-  freeze: auto
-  echo: false
-  output: false
-  warning: false
-  cache: false
-  keep-ipynb: true
+title: "Chapter 4 - Procedure for testing and adjusting translations of the Soundscape (quasi-)Circumplex Model"
 ---
 
 # Abstract
@@ -314,7 +262,6 @@ Each participant rated 27 soundscape recordings on the eight Perceptual Attribut
 
 ```{python}
 # | label: scm-info
-# | output: true
 SCM.info(items=False, norms=False)
 ```
 
@@ -689,12 +636,12 @@ def prepare_congruence_matrices(ssm_table, target_angles=SCM.get_angles()):
 def congruence_tests(
     ssm_results: pd.DataFrame,
     target_angles,
-    procrustes_type: Literal["cosine", "euclidean"] = "cosine",
-    congruence_metric: Literal["orthogonal", "rotational", "generic"] = "orthogonal",
+    procrustes_type: Literal["orthogonal", "rotational", "generic"] = "orthogonal",
+    congruence_metric: Literal["cosine", "euclidean"] = "cosine",
 ):
     d1, d2 = prepare_congruence_matrices(ssm_results, target_angles)
-    procrustes = procrustes_distance(d1, d2, procrustes_type="rotational")
-    congruence, _ = congruence_cosine(d1, d2, metric="cosine")
+    procrustes = procrustes_distance(d1, d2, procrustes_type=procrustes_type)
+    congruence, _ = congruence_cosine(d1, d2, metric=congruence_metric)
     return procrustes, congruence
 ```
 

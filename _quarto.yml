@@ -1,35 +1,56 @@
 project:
-  type: manuscript
+  title: "Chapter 4 - Procedure for testing and adjusting translations of the Soundscape (quasi-)Circumplex Model"
+  output-dir: _output
 
-manuscript:
-  article: index.qmd
-  notebooks: 
-    - notebook: computation/SATP-Methodology.qmd
-      title: "SATP Methodology"
+author:
+  - name: Andrew Mitchell
+    email: andrew.mitchell.18@ucl.ac.uk
+    affiliations:
+        - id: ucl-iede
+          name: University College London
+          department: Institute for Environmental Design and Engineering
+          address: Central House, 14 Upper Woburn Place
+          city: London
+          state: UK
+          postal-code: WC1H 0NN
+    attributes:
+        corresponding: true
+    orcid: 0000-0003-0978-5046
+  - name: Francesco Aletta
+    email: f.aletta@ucl.ac.uk
+    orcid: 0000-0003-0351-3189
+    affiliations:
+        - ref: ucl-iede
+
+keywords:
+  - Soundscape
 
 number-sections: true
+bibliography: references.bib
 
 format:
   html:
     comments:
       hypothesis: true
     theme: cosmo
-  academic-typst: 
+    code-fold: true
+    execute:
+      output: true
+      echo: true
+  academic-typst:
     section-numbering: "1.1.1"
     bibliographystyle: "chicago-author-date"
-    include-in-header: 
+    include-in-header:
       - text: '#import "@preview/mitex:0.2.4": *'
   docx: default
-  jats: default
 
-  # (other formats)
-  # pdf: default
-
-keywords:
-  - Soundscape
-
-bibliography: references.bib
+filters:
+  - abstract-section
 
 execute:
   freeze: auto
-  cache: true
+  echo: false
+  output: false
+  warning: false
+  cache: false
+  
