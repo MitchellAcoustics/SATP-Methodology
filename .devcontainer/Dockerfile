@@ -51,6 +51,10 @@ RUN groupadd --gid 1000 vscode && \
     mkdir -p /home/vscode/.cache/R/pkgcache/pkg && \
     chown -R vscode:vscode /home/vscode
 
+# Copy and run font installation script
+COPY .devcontainer/install_fonts.sh /tmp/install_fonts.sh
+RUN chmod +x /tmp/install_fonts.sh && /tmp/install_fonts.sh && rm /tmp/install_fonts.sh
+
 # Configure R library directory for vscode user to write packages
 RUN mkdir -p /usr/local/lib/R/site-library && \
     chmod 2777 /usr/local/lib/R/site-library && \
