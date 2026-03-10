@@ -25,9 +25,9 @@
   // Typography settings
   lang: "en",
   region: "US",
-  font: "libertinus serif",
+  font: "Libertinus Serif",
   fontsize: 11pt,
-  sansfont: "libertinus sans",
+  sansfont: "Libertinus Sans",
   mathfont: "New Computer Modern Math",
   link-color: rgb("#483d8b"),
   // Structure settings
@@ -37,6 +37,9 @@
   cols: 1,
   doc,
 ) = {
+  // Set FontAwesome version to 6 as 7 is not available yet
+  fa-version("6")
+  
   set document(
     title: title-meta,
     author: author-meta,
