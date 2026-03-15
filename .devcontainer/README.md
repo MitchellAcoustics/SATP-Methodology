@@ -27,7 +27,7 @@ The dev container includes:
 
 - **uv** package manager for Python environment and dependency management
 - **Python** version managed by uv based on `pyproject.toml` requirements
-- **R 4.2.2** with development libraries for rpy2 integration
+- **R 4.4.2** with development libraries for rpy2 integration
 - **renv** for reproducible R package management with pak for fast installation
 - **Quarto** for document rendering and publishing
 - **Jupyter** support for interactive notebooks
@@ -42,12 +42,12 @@ To use a different R version, edit `.devcontainer/docker-compose.yaml`:
 ```yaml
 build:
   args:
-    R_VERSION: "4.3.1"
+    R_VERSION: "4.4.2"
 ```
 
 Then rebuild: `Dev Containers: Rebuild Container`
 
-**Available R versions:** Any version available from the Rocker project (e.g., `4.1.3`, `4.2.2`, `4.3.1`, `4.4.0`)
+**Available R versions:** Any version available from the Rocker project (e.g., `4.1.3`, `4.2.2`, `4.3.1`, `4.4.2`)
 
 Check available versions at: https://hub.docker.com/r/rocker/r-ver/tags
 
