@@ -4,28 +4,6 @@
     "service": "satp-dev",
     "remoteUser": "vscode",
     "workspaceFolder": "/workspace",
-    "mounts": [
-        {
-            "source": "satp-cache",
-            "target": "/home/vscode/.cache",
-            "type": "volume"
-        },
-        {
-            "source": "satp-venv",
-            "target": "${containerWorkspaceFolder}/.venv",
-            "type": "volume"
-        },
-        {
-            "source": "renv-cache",
-            "target": "/home/vscode/.cache/R/renv",
-            "type": "volume"
-        },
-        {
-            "source": "pak-cache",
-            "target": "/home/vscode/.cache/R/pkgcache",
-            "type": "volume"
-        }
-    ],
     "features": {
         "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
             "version": "latest"
