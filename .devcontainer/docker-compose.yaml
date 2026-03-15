@@ -6,7 +6,6 @@ services:
       args:
         R_VERSION: "4.4.2"
     image: satp-methodology:devcontainer
-    container_name: satp-dev
     working_dir: /workspace
     command: sleep infinity
 
