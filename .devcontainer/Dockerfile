@@ -57,9 +57,11 @@ RUN chmod +x /tmp/install_fonts.sh && /tmp/install_fonts.sh && rm /tmp/install_f
 
 # Configure R library directory for vscode user to write packages
 RUN mkdir -p /usr/local/lib/R/site-library && \
-    chmod 2777 /usr/local/lib/R/site-library && \
+    chown root:vscode /usr/local/lib/R/site-library && \
+    chmod 2775 /usr/local/lib/R/site-library && \
     mkdir -p /usr/lib/R/site-library && \
-    chmod 2777 /usr/lib/R/site-library
+    chown root:vscode /usr/lib/R/site-library && \
+    chmod 2775 /usr/lib/R/site-library
 
 # Install renv system-wide for bootstrap
 # RUN Rscript -e "install.packages('renv', repos='https://cloud.r-project.org')"
