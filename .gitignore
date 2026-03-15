@@ -17,3 +17,6 @@ resources
 *_files
 _freeze
 /.quarto/
+_output/
+site_libs/
+_manuscript/
