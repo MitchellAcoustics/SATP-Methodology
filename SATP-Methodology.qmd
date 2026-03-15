@@ -1,5 +1,5 @@
 ---
-title: "Chapter 4 - Procedure for testing and adjusting translations of the Soundscape (quasi-)Circumplex Model"
+title: "Chapter 4 - Soundscape Translation Data: Analysis, Validation, and Application"
 ---
 
 # Abstract

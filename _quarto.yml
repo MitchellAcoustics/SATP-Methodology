@@ -1,26 +1,45 @@
 project:
-  title: "Chapter 4 - Procedure for testing and adjusting translations of the Soundscape (quasi-)Circumplex Model"
+  title: "Chapter 4 - Soundscape Translation Data: Analysis, Validation, and Application"
   output-dir: _output
 
 author:
   - name: Andrew Mitchell
-    email: andrew.mitchell.18@ucl.ac.uk
+    email: a.j.mitchell@ucl.ac.uk
     affiliations:
-        - id: ucl-iede
-          name: University College London
-          department: Institute for Environmental Design and Engineering
-          address: Central House, 14 Upper Woburn Place
-          city: London
-          state: UK
-          postal-code: WC1H 0NN
+      - id: ucl-iede
+        name: University College London
+        department: Institute for Environmental Design and Engineering
+        address: Central House, 14 Upper Woburn Place
+        city: London
+        state: UK
+        postal-code: WC1H 0NN
     attributes:
-        corresponding: true
+      corresponding: true
     orcid: 0000-0003-0978-5046
+  - name: Tin Oberman
+    email: t.oberman@ucl.ac.uk
+    affiliations:
+      - ref: ucl-iede
+    orcid: 0000-0002-0014-0383
   - name: Francesco Aletta
     email: f.aletta@ucl.ac.uk
     orcid: 0000-0003-0351-3189
     affiliations:
-        - ref: ucl-iede
+      - ref: ucl-iede
+  - name: Jian Kang
+    email: j.kang@ucl.ac.uk
+    orcid: 0000-0001-8995-5636
+    affiliations:
+      - ref: ucl-iede
+  - name: Östen Axelsson
+    email: osten.axelsson@ki.se
+    orcid: 0000-0002-2690-7044
+    affiliations:
+      - id: karolinska
+        name: Karolinska Institutet
+        department: Institute of Environmental Medicine
+        city: Stockholm
+        state: Sweden
 
 keywords:
   - Soundscape
