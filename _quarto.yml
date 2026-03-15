@@ -49,13 +49,12 @@ bibliography: references.bib
 
 format:
   html:
-    comments:
-      hypothesis: true
     theme: cosmo
     code-fold: true
     execute:
       output: true
       echo: true
+    embed-resources: true
   academic-typst:
     section-numbering: "1.1.1"
     bibliographystyle: "chicago-author-date"

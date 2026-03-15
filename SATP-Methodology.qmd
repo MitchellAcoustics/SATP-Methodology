@@ -66,10 +66,6 @@ class CongruenceFit(float, ReprEnum):
     PROCRUSTES = 0.9
 ```
 
-In the following chapters of this volume, case studies of individual languages are presented, demonstrating an array of approaches to evaluating the validity of proposed translations of the Soundscape Circumplex Model (SCM) questionnaire.
-This diversity of translation and evaluation methodologies allows for a nuanced understanding of the particular challenges inherent to each language and translation attempt.
-However, to ensure consistency and comparability across all twenty-two languages included in the Soundscape Attributes Translation Project (SATP), it was necessary to develop a standardised quantitative procedure which can evaluate all languages on the same basis and consider the compiled dataset as a whole.
-
 ```{python}
 # | label: load-data
 satp = sspy.databases.satp.load_zenodo(version=SATP_VERSION)
@@ -82,7 +78,11 @@ print(f"Languages ({len(languages)}): {languages}")
 print(f"Institutions ({len(institutions)}): {institutions}")
 ```
 
-This chapter therefore presents such a procedure: a systematic, four-step approach for evaluating and adjusting the quasi-circumplex structure of translated versions of the SCM questionnaire.
+In the following chapters of this volume, case studies of individual languages are presented, demonstrating an array of approaches to evaluating the validity of proposed translations of the Soundscape Circumplex Model (SCM) questionnaire.
+This diversity of translation and evaluation methodologies allows for a nuanced understanding of the particular challenges inherent to each language and translation attempt.
+However, to ensure consistency and comparability across all `{python} num2words(len(languages))` languages included in the Soundscape Attributes Translation Project (SATP), it was necessary to develop a standardised quantitative procedure which can evaluate all languages on the same basis and consider the compiled dataset as a whole.
+
+This chapter therefore presents such a procedure: a systematic, four-step approach for evaluating and adjusting the quasi-circumplex structure of translated versions of the SCM questionnaire. The outcome of this procedure is a classification of each translation's structural validity and a set of adjusted angles that can be applied to correct for structural deviations when computing soundscape coordinates.
 The procedure consists of four key steps:
 
 1.  testing for the presence of a circular ordering in the translated instrument's scales,
@@ -94,7 +94,7 @@ Each step serves as a sequential gate: languages which fail a given step are exc
 
 As described in Chapter 1, the SATP initiative brought together research groups from around the world to produce and evaluate translations of the eight perceptual attribute questions (PAQs) used in the SCM.
 The listening experiment protocol used to collect data for each translation is detailed in Chapter 3.
-This chapter focuses exclusively on the quantitative validation procedure applied to the compiled SATP `{python} SATP_VERSION` dataset, which encompasses `{python} len(languages)` languages collected across `{python} len(institutions)` institutions.
+This chapter focuses exclusively on the quantitative validation procedure applied to the compiled SATP `{python} SATP_VERSION` dataset, which encompasses `{python} num2words(len(languages))` languages collected across `{python} len(institutions)` institutions.
 
 We begin with a brief overview of the circumplex model and its relevance to the challenge of translating psychometric instruments (@sec-circumplex-theory).
 We then present the four-step procedure in detail (@sec-four-step), including the dataset preparation and the statistical methods employed at each stage.
@@ -136,7 +136,7 @@ This pattern of the correlation matrix indicates that the variables are ordered 
 It also means that the correlations between these variables follow a pattern that increases and decreases in a way that resembles a cosine wave, as explained by @Yik2004Relationship and @Grassi2010CircE.
 This circular arrangement of the variables can be tested using a method proposed by @Rounds2000Tinsley.
 
-Browne [-@Browne1992Circumplex] further expanded on the circumplex model by differentiating between equal spacing and equal communality (or radii) constraints.
+@Browne1992Circumplex further expanded on the circumplex model by differentiating between equal spacing and equal communality (or radii) constraints.
 Browne described four variations of circumplex models, which include three types of quasi-circumplex models and one circulant model.
 These variations include the unconstrained or loosely ordered quasi-circumplex, the equal spacing quasi-circumplex, the equal communality quasi-circumplex, and the circulant model that maintains both equal spacing and equal communality.
 
@@ -146,7 +146,7 @@ This flexibility is often necessary in order to accommodate the complexity of ps
 The quasi-circumplex refers to any graphical or conceptual representation where variables or dimensions are organised in a circular or circular-like manner.
 This umbrella term recognises the spectrum of circular models, acknowledging variations in the spacing, organisation, and relationships among variables.
 
-As researchers delve into the intricacies of psychological spaces, the choice between a strict circumplex, a quasi-circumplex, or a more general circular structure becomes crucial.
+As researchers encounter the intricacies of psychological spaces, the choice between a strict circumplex, a quasi-circumplex, or a more general circular structure becomes crucial.
 These models play a pivotal role in visualising and understanding the complex interplay of variables, offering researchers nuanced frameworks to explore and interpret their data.
 
 @Rogoza2021three (@fig-rogoza) provides a helpful visualisation of these circumplex variations:
@@ -154,8 +154,6 @@ These models play a pivotal role in visualising and understanding the complex in
 ![Graphical representation of four variations of circumplex model structure. Model 1 is a circular model, Model 2 is a quasi-circumplex model with equal spacing, Model 3 is a quasi-circumplex model with equal communality, and Model 4 is a circumplex model with equal spacing and equal communality.[^1]](figures/Rogoza2021three-fig1.jpg){#fig-rogoza width="100%"}
 
 [^1]: Reproduced from [@Rogoza2021three] with permission by the publisher.
-
-[^2]: Reproduced from [@Rogoza2021three] with permission by the publisher.
 
 ## Translating circumplex instruments
 
