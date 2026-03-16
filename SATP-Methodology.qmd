@@ -173,7 +173,7 @@ Finally, it may be that even if the original instrument is valid for, e.g., the 
 
 Two approaches could be taken when attempting to translate a circumplex survey instrument.
 The first approach would attempt to achieve direct concurrence with the original instrument, where each scale is directly correlated with the corresponding scale from the original instrument.
-If the circumplex structure is identical between the two languages, then this approach would allow for the most direct comparison between the two languages.
+If the underlying circumplex structure is identical between the two languages, then this approach would allow for the most direct comparison between the two languages.
 However, if the circumplex structure is not identical between the two languages, then this approach would lead to a loss of information.
 The second approach would attempt to achieve the same circumplex structure in the new language as in the original language, allowing for the most direct comparison between the two translations.
 
