@@ -1,0 +1,19 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "charliermarsh.ruff",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "ms-vscode.makefile-tools",
+        "ms-azuretools.vscode-docker",
+        "quarto.quarto",
+        "REditorSupport.r",
+        "Posit.air-vscode",
+        "yzhang.markdown-all-in-one",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "eamodio.gitlens",
+        "mhutchie.git-graph"
+    ]
+}

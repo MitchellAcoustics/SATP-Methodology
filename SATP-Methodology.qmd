@@ -1,0 +1,1111 @@
+---
+title: "Chapter 4 - Soundscape Translation Data: Analysis, Validation, and Application"
+---
+
+# Abstract
+
+This chapter presents a systematic procedure for evaluating and normalising the structure of translated versions of the Soundscape Circumplex Model (SCM) questionnaire.
+A four-step approach is proposed to assess the quasi-circumplex structure of translated instruments, identify deviations from the original model, and implement corrective measures to enhance structural fidelity.
+The procedure first confirms the circular ordering of the translated scales, then evaluates the fit of Browne's circumplex structural equation models, followed by the application of the Structural Summary Method to locate circumplex scales within each language's empirical circumplex space, and finally tests the congruence between empirical and theoretical scale locations.
+Results are classified using a three-tier confidence system (Low, Medium, High) to indicate the reliability of the circumplex structure in each translation.
+To enable normalisation across translations, "adjusted angles" are derived from the structural equation modelling step, providing a correction mechanism for the pleasant--eventful coordinate space proposed in the ISO 12913 series.
+Applied to the SATP v1.5 dataset comprising twenty-two languages, the procedure classifies eight translations as High confidence, eleven as Medium, and three as Low.
+The adjusted angles are shown to substantially reduce cross-language variability when computing ISOPleasant and ISOEventful coordinates, enabling more reliable cross-cultural comparison of soundscape assessments.
+
+# Introduction
+
+```{python}
+# | label: setup
+# Setup Python
+
+from enum import Enum, ReprEnum
+from num2words import num2words
+import pandas as pd
+from tqdm.auto import tqdm
+from IPython.display import Markdown
+import warnings
+from typing import Literal
+
+import soundscapy as sspy
+import circumplex
+import rthor
+
+from computation import scm_inst
+
+SATP_VERSION = "v1.5"
+
+SCM = circumplex.get_instrument("SCM")
+
+scales = SCM.scale_abbrevs
+equal_angles = SCM.get_angles()
+```
+
+```{python}
+# | label: define-fit-metrics
+# Define fit metrics
+
+
+class RTHORfit(float, ReprEnum):
+    CI = 0.7
+    p = 0.05
+
+
+class CircEfit(float, ReprEnum):
+    CFI = 0.92
+    GFI = 0.9
+    SRMR = 0.08
+
+
+class SSMfit(float, ReprEnum):
+    R2 = 0.8
+    A = 0.15
+
+
+class CongruenceFit(float, ReprEnum):
+    COSINE = 0.9
+    PROCRUSTES = 0.9
+```
+
+```{python}
+# | label: load-data
+satp = sspy.databases.satp.load_zenodo(version=SATP_VERSION)
+
+languages = sorted(satp["Language"].unique())
+institutions = satp["Institution"].unique()
+
+print(f"Total rows: {len(satp):,}")
+print(f"Languages ({len(languages)}): {languages}")
+print(f"Institutions ({len(institutions)}): {institutions}")
+```
+
+In the following chapters of this volume, case studies of individual languages are presented, demonstrating an array of approaches to evaluating the validity of proposed translations of the Soundscape Circumplex Model (SCM) questionnaire.
+This diversity of translation and evaluation methodologies allows for a nuanced understanding of the particular challenges inherent to each language and translation attempt.
+However, to ensure consistency and comparability across all `{python} num2words(len(languages))` languages included in the Soundscape Attributes Translation Project (SATP), it was necessary to develop a standardised quantitative procedure which can evaluate all languages on the same basis and consider the compiled dataset as a whole.
+
+This chapter therefore presents such a procedure: a systematic, four-step approach for evaluating and adjusting the quasi-circumplex structure of translated versions of the SCM questionnaire. The outcome of this procedure is a classification of each translation's structural validity and a set of adjusted angles that can be applied to correct for structural deviations when computing soundscape coordinates.
+The procedure consists of four key steps:
+
+1.  testing for the presence of a circular ordering in the translated instrument's scales,
+2.  assessing the fit of Browne's [-@Browne1992Circumplex] circumplex structural equation models to the data and deriving adjusted angles,
+3.  using the Structural Summary Method to locate circumplex scales within each language's empirical circumplex space, and
+4.  testing the congruence between these empirical locations and theoretical expectations.
+
+Each step serves as a sequential gate: languages which fail a given step are excluded from subsequent analysis and classified accordingly within a three-tier confidence system.
+
+As described in Chapter 1, the SATP initiative brought together research groups from around the world to produce and evaluate translations of the eight perceptual attribute questions (PAQs) used in the SCM.
+The listening experiment protocol used to collect data for each translation is detailed in Chapter 3.
+This chapter focuses exclusively on the quantitative validation procedure applied to the compiled SATP `{python} SATP_VERSION` dataset, which encompasses `{python} num2words(len(languages))` languages collected across `{python} len(institutions)` institutions.
+
+We begin with a brief overview of the circumplex model and its relevance to the challenge of translating psychometric instruments (@sec-circumplex-theory).
+We then present the four-step procedure in detail (@sec-four-step), including the dataset preparation and the statistical methods employed at each stage.
+The results of applying this procedure to the SATP v1.5 dataset are presented in @sec-results, followed by a demonstration of how the derived adjusted angles can be practically applied to compute corrected soundscape coordinates (@sec-applying-angles).
+The chapter concludes with a discussion of the findings and their implications for cross-cultural soundscape research (@sec-discussion).
+
+# The Soundscape Circumplex Model and Translation Challenge {#sec-circumplex-theory}
+
+## Defining the circumplex model {#sec-defining-circumplex}
+
+The concept of the psychometric circumplex model, first introduced by @Guttman1954new, revolves around the idea of a circular relationship among variables.
+This circular relationship can be seen by identifying certain correlation patterns within the correlation matrix among variables, when appropriately ordered [@Browne1992Circumplex].
+In the case of the circular structure, the strength of the correlation coefficients in the matrix decreases as you move away from the diagonal, and then increases again as you move towards the opposite diagonal.
+This pattern of correlations can be seen in @tbl-circumplex.
+
++------+----------+----------+----------+----------+----------+----------+----------+------+
+|      | V1       | V2       | V3       | V4       | V5       | V6       | V7       | V8   |
++======+==========+==========+==========+==========+==========+==========+==========+======+
+| V1   | 1        |          |          |          |          |          |          |      |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+| V2   | $\rho_1$ | 1        |          |          |          |          |          |      |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+| V3   | $\rho_2$ | $\rho_1$ | 1        |          |          |          |          |      |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+| V4   | $\rho_3$ | $\rho_2$ | $\rho_1$ | 1        |          |          |          |      |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+| V5   | $\rho_4$ | $\rho_3$ | $\rho_2$ | $\rho_1$ | 1        |          |          |      |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+| V6   | $\rho_3$ | $\rho_4$ | $\rho_3$ | $\rho_2$ | $\rho_1$ | 1        |          |      |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+| V7   | $\rho_2$ | $\rho_3$ | $\rho_4$ | $\rho_3$ | $\rho_2$ | $\rho_1$ | 1        |      |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+| V8   | $\rho_1$ | $\rho_2$ | $\rho_3$ | $\rho_4$ | $\rho_3$ | $\rho_2$ | $\rho_1$ | 1    |
++------+----------+----------+----------+----------+----------+----------+----------+------+
+
+: Theoretical pattern of the correlation matrix corresponding to a circular structure. $\rho_1 > \rho_2 > \rho_3 > \rho_4$ [@Gurtman2000Interpersonal]. {#tbl-circumplex .column-page}
+
+This pattern of the correlation matrix indicates that the variables are ordered in a circular fashion, with the strongest correlations between adjacent variables, and the weakest correlations between variables that are furthest apart.
+It also means that the correlations between these variables follow a pattern that increases and decreases in a way that resembles a cosine wave, as explained by @Yik2004Relationship and @Grassi2010CircE.
+This circular arrangement of the variables can be tested using a method proposed by @Rounds2000Tinsley.
+
+@Browne1992Circumplex further expanded on the circumplex model by differentiating between equal spacing and equal communality (or radii) constraints.
+Browne described four variations of circumplex models, which include three types of quasi-circumplex models and one circulant model.
+These variations include the unconstrained or loosely ordered quasi-circumplex, the equal spacing quasi-circumplex, the equal communality quasi-circumplex, and the circulant model that maintains both equal spacing and equal communality.
+
+In certain instances, the rigidity of a circumplex may be relaxed, leading to the concept of a quasi-circumplex.
+The term "quasi" implies a departure from strict adherence to even spacing and equal communality, allowing for some flexibility in the arrangement of variables.
+This flexibility is often necessary in order to accommodate the complexity of psychological constructs, which may not always fit neatly into a rigid circular structure.
+The quasi-circumplex refers to any graphical or conceptual representation where variables or dimensions are organised in a circular or circular-like manner.
+This umbrella term recognises the spectrum of circular models, acknowledging variations in the spacing, organisation, and relationships among variables.
+
+As researchers encounter the intricacies of psychological spaces, the choice between a strict circumplex, a quasi-circumplex, or a more general circular structure becomes crucial.
+These models play a pivotal role in visualising and understanding the complex interplay of variables, offering researchers nuanced frameworks to explore and interpret their data.
+
+@Rogoza2021three (@fig-rogoza) provides a helpful visualisation of these circumplex variations:
+
+![Graphical representation of four variations of circumplex model structure. Model 1 is a circular model, Model 2 is a quasi-circumplex model with equal spacing, Model 3 is a quasi-circumplex model with equal communality, and Model 4 is a circumplex model with equal spacing and equal communality.[^1]](figures/Rogoza2021three-fig1.jpg){#fig-rogoza width="100%"}
+
+[^1]: Reproduced from [@Rogoza2021three] with permission by the publisher.
+
+## Translating circumplex instruments
+
+Typically, circumplex scales are measured via a series of questions in a survey instrument.
+These instruments are initially developed in one language and the validity and structure of the instrument is tested in that language.
+Often these instruments are directly translated into other languages to enable their use in other countries.
+However, the validity of the instrument in the new language is not guaranteed.
+Changes in the correlation structure can be caused by errors in the translation process, by semantic and linguistic differences between the translated scales even given a valid translation, and by a lack of generalisability of the circumplex instrument.
+
+It is easy to see how errors in the translation process can lead to changes in the correlation structure.
+For example, if a question is mistranslated, then the responses to that question will not be correlated with the responses to the other questions in the instrument.
+Semantic and linguistic differences between the translated scales can also lead to changes in the correlation structure.
+For example, if a question is translated into a language where the concept does not exist or cannot be easily expressed, then the responses to that question will not be correlated with the responses to the other questions in the instrument.
+Finally, it may be that even if the original instrument is valid for, e.g., the English-speaking population, it may not be valid for other populations due to cultural differences.
+
+### Goals of translating a circumplex instrument
+
+Two approaches could be taken when attempting to translate a circumplex survey instrument.
+The first approach would attempt to achieve direct concurrence with the original instrument, where each scale is directly correlated with the corresponding scale from the original instrument.
+If the underlying circumplex structure is identical between the two languages, then this approach would allow for the most direct comparison between the two languages.
+However, if the circumplex structure is not identical between the two languages, then this approach would lead to a loss of information.
+The second approach would attempt to achieve the same circumplex structure in the new language as in the original language, allowing for the most direct comparison between the two translations.
+
+In this second approach, identifying the differences in structure between translations enables the process of locating an external variable to be corrected for the differences in structure.
+Given that at minimum a quasi-circumplex structure can be confirmed, then the deviations in either the angles or communalities from the ideal circumplex structure can be measured and accounted for.
+When this is done separately for the original and translated instruments, then an external variable which has the same theoretical location in both instruments should be located in the same location in both corrected instruments.
+
+This has an important impact on comparing results under the two translations.
+If an external variable is theoretically located in a single, fixed position in the circumplex space, locating it without accounting for the differences in structure between the two translations will lead to different locations in the two translations.
+The interpretation of this result would then be that the external variable is located in different positions in the two languages.
+However, if the differences in structure are accounted for, then the external variable should be located in the same position in both translations.
+By applying the correction we can attempt to discover differences in the effect of external variables, independent of the differences in structure between the two translations.
+It is this second approach --- structural equivalence with angle corrections --- that forms the basis of the procedure presented in this chapter.
+
+# A Four-Step Validation Procedure {#sec-four-step}
+
+In @Rogoza2021three, the authors propose a three-step procedure for assessing circumplex models.
+Their steps are:
+
+1.  verify whether the analysed model conforms to a circumplex structure using Structural Equation Modelling based on @Browne1992Circumplex's model;
+2.  test the possibility of locating an external variable within the empirical circumplex using the Structural Summary Method [@Gurtman1994differentiating]; and
+3.  assess the extent to which empirical locations are congruent with theoretical predictions within the circumplex structure.
+
+We expand upon this three-step procedure and adapt it to the specific case of testing multiple translations of the same circumplex instrument.
+Our goals are, for each translation, to verify the quasi-circumplex structure, to derive angle corrections that account for structural deviations, and to test whether the corrected circumplex can reliably locate external variables in positions congruent with those of the overall dataset.
+We achieve this by adding an initial step that incorporates @Rounds2000Tinsley's test of circular ordering, confirming that the rank order of the scales is preserved across translations before proceeding to more detailed structural analysis.
+The resulting four-step procedure is summarised as follows:
+
+1.  **Step 1 — Circular Order**: Confirm that the circular ordering of the eight PAQ scales is maintained in each translation, using Tracey's randomisation test of the circular order model.
+2.  **Step 2 — Structural Equation Modelling**: Fit Browne's circular stochastic process model to assess the quasi-circumplex structure and extract adjusted angular positions for each scale.
+3.  **Step 3 — Structural Summary Method**: Locate the overall dataset's circumplex scales within each language's circumplex space using SSM analysis with the adjusted angles, verifying that sinusoidal profiles achieve adequate fit.
+4.  **Step 4 — Congruence Testing**: Test the congruence between the empirically located positions and their theoretical expectations using cosine similarity and Procrustes distance.
+
+Languages are then assigned to one of three confidence tiers (Low, Medium, or High) based on their performance across these steps, providing a transparent summary of each translation's structural validity.
+
+## Dataset and Data Preparation
+
+```{python}
+# | label: define-languages
+class LanguageNames(str, Enum):
+    alb = "Albanian"
+    arb = "Arabic"
+    bra = "Brazilian Portuguese"
+    cmn = "Mandarin Chinese"
+    deu = "German"
+    ell = "Greek"
+    eng = "English"
+    fra = "French"
+    hrv = "Croatian"
+    ind = "Indonesian"
+    ita = "Italian"
+    jpn = "Japanese"
+    kor = "Korean"
+    nld = "Dutch"
+    pol = "Polish"
+    por = "Portuguese"
+    spa = "Spanish"
+    swe = "Swedish"
+    tha = "Thai"
+    tur = "Turkish"
+    vie = "Vietnamese"
+    yue = "Cantonese"
+    zsm = "Malay"
+
+    def print_name_lbl(self):
+        return f"{self.value} ({self.name})"
+
+    @classmethod
+    def print_all_names(cls, incl_langs: list[str] | None = None):
+        langs_to_include = (
+            [cls[lang] for lang in incl_langs] if incl_langs else [lang for lang in cls]
+        )
+        formatted_names = [lang.print_name_lbl() for lang in langs_to_include]
+        all_but_last_item = ", ".join(formatted_names[:-1])
+        return f"{all_but_last_item}, and {formatted_names[-1]}"
+```
+
+The analysis presented in this chapter draws on the Soundscape Attributes Translation Project (SATP) dataset, version `{python} SATP_VERSION`.
+This dataset compiles responses from listening experiments conducted across `{python} len(languages)` languages: `{python} LanguageNames.print_all_names()`.
+Responses from the LNC institution were excluded from the analysis due to differences in data collection protocol.
+The details of the experimental protocol, stimuli, and participant recruitment for each language are described in the respective language chapters of this volume and are not repeated here.
+
+Each participant rated 27 soundscape recordings on the eight Perceptual Attribute Questionnaire (PAQ) scales: *pleasant* (PAQ1), *vibrant* (PAQ2), *eventful* (PAQ3), *chaotic* (PAQ4), *annoying* (PAQ5), *monotonous* (PAQ6), *uneventful* (PAQ7), and *calm* (PAQ8).
+
+```{python}
+# | label: scm-info
+SCM.info(items=False, norms=False)
+```
+
+<!-- TODO: Remove or rewrite this paragraph -->
+
+The sample sizes reported in the results tables represent the total number of observations (i.e. participant $\times$ recording combinations) rather than the number of unique participants; for example, a language with 68 participants yields approximately $68 \times 27 = 1{,}836$ observations.
+
+```{python}
+# | label: data-prep
+# Missing values
+# We can see that only a handful of rows have missing values in the PAQ columns.
+satp[satp[scales].isnull()].any(axis=1)
+
+# For this analysis, we will simply drop these rows, leaving us with a clean dataset
+# of PAQ responses for the following steps.
+# We're not concerned with missing Age, Gender, or loud values.
+satp = satp.dropna(subset=scales)
+satp.isnull().sum()
+```
+
+Prior to analysis, the PAQ responses were ipsatised using grand-mean centring.
+For each participant, a single grand mean was computed across all eight PAQ scales and all 27 recordings, and this value was subtracted from every individual response.
+This procedure removes systematic individual differences in overall rating tendency — for instance, participants who consistently use the upper or lower end of the response scale — without removing variation between scales or between recordings.
+Grand-mean centring is recommended by @Girard2022circumplex for circumplex analyses and is implemented in `soundscapy` as the default ipsatization method.
+
+## Step 1 — Circular Order
+
+The first step verifies that the process of translation has not altered the rank ordering of correlations among the eight PAQ scales.
+Following the approach taken in @Gurtman2000Interpersonal and previously employed for the SCM by @Lam2022Assessing, we apply the randomisation test of the circular order model developed by @Rounds2000Tinsley.
+This test compares the observed order relations in a correlation matrix against the order relations predicted by a hypothesised circular arrangement of the scales.
+
+The key index for this test is @Hubert1987Evaluating's Correspondence Index (CI), a descriptive measure reflecting the degree to which the model's ordered predictions align with the observed correlation matrix.
+The CI is calculated as the proportion of predictions met minus the proportion violated, yielding a range from $+1.0$ (all predictions fulfilled) to $-1.0$ (all predictions contradicted).
+A randomisation test [@Tracey1997RANDALL] is applied to the hypothesised order relations, producing an exact probability that represents the likelihood of achieving the observed CI value under all possible permutations of the correlation matrix.
+
+We apply the following thresholds: a CI value greater than `{python} RTHORfit.CI.value` and a randomisation $p$-value less than `{python} RTHORfit.p.value`.
+Languages failing to meet these thresholds are excluded from subsequent steps, as failure indicates that the fundamental circular ordering of the PAQ scales has not been preserved in translation.
+This may reflect translation errors, semantic shifts that disrupt the expected pattern of inter-scale correlations, or genuine cultural differences in how the soundscape attributes relate to one another.
+
+```{python}
+# | label: rthor-test
+
+# rthor.test() can take a list of dataframes
+# So we use list comprehension to split our `satp` dataframe into separate
+# dataframes for each language, i.e. [eng_df, spa_df, ...]
+rthor_results = rthor.test(
+    [satp.query("Language == @lang")[SCM.scale_abbrevs] for lang in languages],
+    labels=languages,
+    order="circular8",
+)
+
+rthor_results["passes"] = (rthor_results["ci"] > RTHORfit.CI) & (
+    rthor_results["p_value"] < RTHORfit.p
+)
+
+rthor_passing = rthor_results.query("passes").sort_values("ci")
+rthor_failing = rthor_results.query("not passes").sort_values("ci")
+
+pass_step1 = rthor_passing["label"].tolist()
+fail_step1 = rthor_failing["label"].tolist()
+```
+
+## Step 2 — Structural Equation Modelling
+
+For languages that pass the circular order test, we proceed to a more detailed assessment of the circumplex structure using @Browne1992Circumplex's circular stochastic process model with a Fourier series correlation function.
+This is a non-standard Structural Equation Model (SEM) specifically designed for testing circumplex structures, allowing a researcher to examine the extent to which a sample correlation matrix conforms to a circumplex pattern.
+
+Browne's model can be fitted under four structural constraints, corresponding to the four circumplex variations described in @sec-defining-circumplex:
+
+1.  **Unconstrained circular**: Free angles and free communalities — the loosest model, testing only whether a circular pattern is present.
+2.  **Equal-spacing quasi-circumplex**: Angles fixed at 45° intervals, communalities free to vary.
+3.  **Equal-communality quasi-circumplex**: Angles free to vary, communalities constrained to be equal across scales.
+4.  **Strict circumplex**: Both angles and communalities constrained — 45° spacing with equal communalities.
+
+```{python}
+# | label: circe-fit
+# | output: false
+# | warning: false
+# Running CircE for all languages that passed Step 1
+
+satp_s2 = satp.query("Language in @pass_step1").copy()
+s2_languages = sorted(satp_s2["Language"].unique())
+
+circe_results: list[sspy.satp.CircEResults] = []
+fit_errors: dict[str, Exception] = {}
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", UserWarning)
+    for lang in tqdm(s2_languages):
+        try:
+            circe_results.append(
+                sspy.satp.fit_circe(
+                    satp_s2.query("Language == @lang").rename(
+                        columns={"Participant": "participant"}
+                    ),
+                    language=lang,
+                    datasource="SATP",
+                    errors="warn",
+                )
+            )
+        except Exception as e:
+            fit_errors[lang] = e
+```
+
+For the purposes of this validation procedure, the equal-communality quasi-circumplex model (Model 3) is of primary interest.
+This model allows the angular positions of the scales to deviate from the ideal 45° spacing while constraining all scales to have equal communality (i.e. equal radii in the circumplex space).
+When this model achieves adequate fit, the estimated angles provide a direct measure of how much each scale's position deviates from the theoretical circumplex.
+These *adjusted angles* are extracted and carried forward for use in subsequent steps.
+
+The model is implemented using the CircE package [@Grassi2010CircE] for R, executed through `soundscapy`'s R interface[^3].
+Each of the four model variations is fitted separately for each language, and the results are compiled into a summary table.
+Model fit is evaluated using three indices, summarised in @tbl-indices:
+
+[^3]: The version of CircE originally developed by Grassi is no longer maintained and fails on installation in R.
+    As such, the specific version of CircE with bug fixes implemented by the authors used for this analysis is hosted separately on Github at: <https://github.com/MitchellAcoustics/CircE-R>
+
+-   **Comparative Fit Index (CFI)** $\geq$ `{python} CircEfit.CFI.value` [@Moshona2023Optimization]
+-   **Goodness of Fit Index (GFI)** $\geq$ `{python} CircEfit.GFI.value` [@Rogoza2021three]
+-   **Standardised Root Mean Square Residual (SRMR)** $<$ `{python} CircEfit.SRMR.value` [@Hu1999Cutoff; @Moshona2023Optimization; @Tarlao2020Investigating]
+
++-----------------------------------------------+---------------+---------------------------+
+| **Fit Index**                                 | **Threshold** | **Reference**             |
++===============================================+:=============:+:=========================:+
+| Correspondence Index (CI)                     | p \< 0.05,    | @Gurtman2000Interpersonal |
+|                                               |               |                           |
+|                                               | CI \> 0.70    |                           |
++-----------------------------------------------+---------------+---------------------------+
+| Comparative Fit Index (CFI)                   | *0.92*        | @Moshona2023Optimization  |
++-----------------------------------------------+---------------+---------------------------+
+| Goodness of Fit Index (GFI)                   | *0.90*        | @Rogoza2021three          |
++-----------------------------------------------+---------------+---------------------------+
+| Standardized Root Mean Square Residual (SRMR) | *0.08*        | @Hu1999Cutoff             |
+|                                               |               |                           |
+|                                               |               | @Moshona2023Optimization  |
+|                                               |               |                           |
+|                                               |               | @Tarlao2020Investigating  |
++-----------------------------------------------+---------------+---------------------------+
+
+: Fit indices and thresholds, including the reference from which the threshold is derived. {#tbl-indices}
+
+A language passes Step 2 if the equal-communality model meets all three thresholds simultaneously, yielding a pass score of 3 out of 3.
+
+```{python}
+# | label: circe-results
+# Construct Step 2 SEM Results table
+sem_res = pd.concat([r.table for r in circe_results], ignore_index=True)
+
+sem_res["CFI Pass"] = sem_res["cfi"] >= CircEfit.CFI.value
+sem_res["GFI Pass"] = sem_res["gfi"] >= CircEfit.GFI.value
+sem_res["SRMR Pass"] = sem_res["srmr"] < CircEfit.SRMR.value
+sem_res["Score"] = (
+    sem_res[["CFI Pass", "GFI Pass", "SRMR Pass"]].sum(axis=1).astype(int)
+)
+sem_res["Pass"] = sem_res["Score"] >= 3
+
+circe_passing = sem_res.query("model == 'equal_com' & Pass")
+circe_failing = sem_res.query("model == 'equal_com' & not Pass")
+
+pass_step2 = circe_passing["language"].tolist()
+fail_step2 = circe_failing["language"].tolist()
+```
+
+Notably, the Root Mean Square Error of Approximation (RMSEA) is excluded from the analysis.
+This decision follows both the critique in @Rogoza2021three — who note that RMSEA "becomes biased in the case of high correlations between proximal variables, as found in circumplex models, and should be interpreted with caution" — and the more recent methodological warnings of @West2022Handbook regarding the sensitivity of RMSEA to model characteristics that are inherent to circumplex structures.
+
+Once the equal-communality model is accepted, the adjusted angles it yields describe the empirical angular positions of the eight PAQ scales for that language.
+If the strict circumplex model were adequate for all languages, these angles would equal the ideal positions (0°, 45°, 90°, ..., 315°) and no correction would be needed.
+In practice, the quasi-circumplex structure of most translations requires that these deviations be measured and accounted for — a process carried out in the subsequent steps.
+
+```{python}
+# | label: adjusted-angles
+
+# Construct Angles dataframe
+ang_df = sem_res.query("model == 'equal_com' & language in @pass_step2")[
+    ["language"] + SCM.scale_abbrevs
+].set_index("language")
+```
+
+## Step 3 — SSM Analysis
+
+Once the general circumplex structure has been confirmed, we proceed to test whether external variables can be reliably located within each language's circumplex space.
+The Structural Summary Method (SSM) provides a technique for summarising correlation patterns among measurements that are hypothesised to conform to a circumplex structure [@Gurtman1994differentiating; @Rogoza2021three].
+SSM fits a sinusoidal curve to a set of correlations ($q_i$) as a function of the angular positions ($\theta_i$) of the circumplex scales, optimising three parameters: elevation ($e$), amplitude ($\alpha$), and angular displacement ($d$).
+The model is expressed as:
+
+$$
+q_i = e + \alpha \cos(\theta_i - d)
+$$ {#eq-ssm}
+
+where:
+
+-   **Elevation** ($e$) represents the average correlation between the external variable and all circumplex scales, indicating the presence of a general factor.
+-   **Amplitude** ($\alpha$) measures the distinctiveness of the profile — the distance from the mean correlation to the peak — indicating whether the variable is associated predominantly with a specific region of the circumplex or equally with all regions.
+-   **Angular displacement** ($d$) denotes the angle at which the profile reaches its maximum, representing the empirical location of the external variable within the circumplex.
+-   **Model fit** ($R^2$) assesses how well the observed correlation profile conforms to the expected cosine function.
+
+Taking inspiration from @Yik2004Relationship, who propose that one circumplex can be located within another, we use the circumplex structure of the overall SATP dataset as the reference against which each language is tested.
+Specifically, for each PAQ scale of the reference circumplex (computed as the mean across all languages that passed Steps 1 and 2), we calculate its SSM profile within each language's circumplex, using that language's adjusted angles from Step 2.
+This yields an estimated position ($x_{\text{est}}, y_{\text{est}}$) for each reference scale within the language's circumplex space.
+
+The process proceeds as follows:
+
+1.  For both the reference set (overall dataset) and the test set (individual language), compute the mean value of each PAQ scale for each of the 27 recordings.
+2.  For each reference scale, calculate the SSM profile by correlating it with the test language's scale means across recordings, using the test language's adjusted angles.
+3.  Extract the estimated positions from the SSM profiles.
+
+```{python}
+# | label: ssm-fit
+
+satp_s3 = satp.query("Language in @pass_step2").copy()
+# satp_s3[scales] = sspy.surveys.ipsatize(satp_s3, participant_col="Participant")
+
+
+def step3_test_language(
+    step3_df: pd.DataFrame,
+    language: str,
+    angles_df: pd.DataFrame = ang_df,
+    scales=scales,
+):
+    ref_cols = [f"{s}_ref" for s in scales]
+    overall_means = (
+        # Exclude investigation language from rest of the dataset
+        step3_df.query("Language != @language")
+        # Before calculating dataset overall means
+        .groupby("Recording")[scales]
+        .mean()
+        .rename(columns={s: f"{s}_ref" for s in scales})
+        .reset_index()
+    )
+    # Get the recording means for the investigation language
+    language_means = (
+        step3_df.query("Language == @language")
+        .groupby("Recording")[scales]
+        .mean()
+        .reset_index()
+    )
+    # Add as new columns against the overall dataset means
+    merged = language_means.merge(overall_means, on="Recording", suffixes=("", "_ref"))
+    return circumplex.ssm_analyze(
+        merged,
+        scales=scales,
+        angles=angles_df.query("language == @language").to_numpy()[0],
+        measures=ref_cols,
+        measures_labels=scales,
+        seed=42,
+    )
+
+
+ssm_results = {
+    lang: step3_test_language(satp_s3, language=lang)
+    for lang in tqdm(satp_s3.Language.unique())
+}
+```
+
+```{python}
+# | label: r2-score
+r2_results_df = pd.DataFrame.from_dict(
+    {lang: value.results["fit_est"].to_numpy() for lang, value in ssm_results.items()},
+    orient="index",
+    columns=scales,
+)
+r2_results_df["Score"] = (r2_results_df >= SSMfit.R2).sum(axis=1)
+r2_results_df["Pass"] = r2_results_df["Score"] >= 8
+r2_results_df.index.name = "Language"
+# r2_results_df.sort_values(by="Score").round(2)
+```
+
+```{python}
+# | label: amp-score
+amp_results_df = pd.DataFrame.from_dict(
+    {lang: value.results["a_est"].to_numpy() for lang, value in ssm_results.items()},
+    orient="index",
+    columns=scales,
+)
+amp_results_df["Score"] = (amp_results_df >= SSMfit.A).sum(axis=1)
+amp_results_df.index.name = "Language"
+# amp_results_df.round(2)
+```
+
+We apply the following thresholds for the SSM fit:
+
+-   $R^2 > `{python} SSMfit.R2.value`$ for each scale profile, indicating a strong fit of the cosine model. 
+    <!-- We adopt a more stringent threshold than the general $R^2 > 0.80$ guidance in @Rogoza2021three, reflecting our prior expectation that circumplex variables should fit very well within each translation's own circumplex. -->
+-   Amplitude $> `{python} SSMfit.A.value`$, indicating that the profile is sufficiently distinctive.
+
+If any scale yields $R^2$ values below `{python} SSMfit.R2.value`, the sinusoidal model does not adequately describe the correlation pattern, and the remaining SSM coefficients should not be interpreted.
+Languages failing this criterion are flagged as having inadequate SSM fit, which may indicate that the circumplex structure, even after angle correction, does not function well enough to reliably locate external variables.
+
+```{python}
+# | label: step3-res
+ssm_passing = r2_results_df.query("Pass")
+ssm_failing = r2_results_df.query("not Pass")
+
+pass_step3 = ssm_passing.index.tolist()
+fail_step3 = ssm_failing.index.tolist()
+```
+
+## Step 4 — Congruence Testing
+
+The final step assesses the degree of agreement between the empirically estimated positions from Step 3 and their theoretical expectations.
+Two complementary measures are employed: cosine congruence and rotational Procrustes distance.
+
+**Cosine Congruence.** What @Rogoza2021three refer to as Tucker's Congruence Coefficient is equivalent to the cosine similarity between vectors.
+For each scale, the estimated position ($x_{\text{est}}, y_{\text{est}}$) from the SSM analysis is compared with the corresponding theoretical position on the unit circle (computed from the ideal angles).
+The cosine similarity is computed for each scale, and the mean across all eight scales yields the model congruence.
+A threshold of model congruence $>$ `{python} CongruenceFit.COSINE.value` is applied; values exceeding this threshold indicate that the language's circumplex space is sufficiently aligned with the theoretical structure to permit reliable cross-linguistic comparison.
+
+```{python}
+# | label: cosine-congruence-def
+def congruence_cosine(data1, data2, metric: Literal["cosine", "euclidean"] = "cosine"):
+    from sklearn.metrics.pairwise import cosine_similarity
+    from scipy.spatial.distance import cdist
+    import numpy as np
+
+    if metric == "cosine":
+        sim = cosine_similarity(data1, data2)
+    elif metric == "euclidean":
+        sim = 1 - cdist(data1, data2, metric=metric)
+    else:
+        raise ValueError("metric must be 'cosine' or 'euclidean")
+    # Get the diagonal values which compare against the appropriate angles
+    congruence_values = np.diag(sim)
+    return float(np.mean(congruence_values)), congruence_values
+```
+
+**Procrustes Distance.** As a secondary validation, we compute the rotational Procrustes distance between the matrix of estimated positions and the matrix of theoretical positions.
+Despite @Rogoza2021three's description, the cosine congruence method is not based on a Procrustes analysis per se.
+The Procrustes approach provides a complementary perspective by computing the squared Frobenius norm of the difference between two orthogonal matrices after optimal rotation and scaling [@Andreella2023Procrustes].
+Following @Bakhtiar2015symmetrical, when the input matrices are scaled (i.e. the analysis is performed with `scale=True`), the Procrustes distance is a true metric satisfying $0 < d(X, Y) < 1$.
+We convert this distance to a similarity measure by computing $1 - d$, allowing direct comparison with the cosine congruence values.
+
+```{python}
+# | label: procustes-distance-def
+def procrustes_distance(
+    data1,
+    data2,
+    procrustes_type: Literal["orthogonal", "rotational", "generic"] = "orthogonal",
+    *,
+    translate=True,
+    scale=True,
+):
+    if procrustes_type == "orthogonal":
+        from procrustes import orthogonal
+
+        pro_res = orthogonal(data1, data2, translate=translate, scale=scale)
+    elif procrustes_type == "rotational":
+        from procrustes import rotational
+
+        pro_res = rotational(data1, data2, translate=translate, scale=scale)
+    elif procrustes_type == "generic":
+        from procrustes import generic
+
+        pro_res = generic(data1, data2, translate=translate, scale=scale)
+
+    return pro_res.error
+```
+
+Together, these two measures provide a robust assessment of whether the corrected circumplex structure of each translation preserves the geometric relationships necessary for cross-linguistic comparability.
+
+```{python}
+def prepare_congruence_matrices(ssm_table, target_angles=SCM.get_angles()):
+    """Prepare the congruence matrices for the SSM results"""
+    import numpy as np
+
+    data2 = ssm_table[["x_est", "y_est"]].values
+    data1 = np.column_stack(
+        [np.cos(np.deg2rad(target_angles)), np.sin(np.deg2rad(target_angles))]
+    )
+    return data1, data2
+
+
+def congruence_tests(
+    ssm_results: pd.DataFrame,
+    target_angles,
+    procrustes_type: Literal["orthogonal", "rotational", "generic"] = "orthogonal",
+    congruence_metric: Literal["cosine", "euclidean"] = "cosine",
+):
+    d1, d2 = prepare_congruence_matrices(ssm_results, target_angles)
+    procrustes = procrustes_distance(d1, d2, procrustes_type=procrustes_type)
+    congruence, _ = congruence_cosine(d1, d2, metric=congruence_metric)
+    return procrustes, congruence
+```
+
+```{python}
+# | label: congruence-fit
+satp_s4 = satp_s3.query("Language in @pass_step3").copy()
+
+congruence_results: dict[str, dict[str, float]] = {}
+target_angles = SCM.get_angles()
+
+for lang in sorted(satp_s4.Language.unique()):
+    ssm_result = ssm_results[lang]
+    eq_ang_procrustes, eq_ang_congruence = congruence_tests(
+        ssm_result.results,
+        target_angles=SCM.get_angles(),
+        procrustes_type="rotational",
+        congruence_metric="cosine",
+    )
+    adj_ang_procrustes, adj_ang_congruence = congruence_tests(
+        ssm_result.results,
+        target_angles=ang_df.query("language == @lang").to_numpy()[0],
+        procrustes_type="rotational",
+        congruence_metric="cosine",
+    )
+    # d1, d2 = prepare_congruence_matrices(ssm_result.results, target_angles)
+    # congruence, _ = congruence_cosine(d1, d2, metric="cosine")
+    # procrustes = procrustes_similarity(d2, d2, procrustes_type="rotational")
+    congruence_results.update(
+        {
+            lang: {
+                "eq_ang_congruence": eq_ang_congruence,
+                "eq_ang_procrustes": 1 - eq_ang_procrustes,
+                "adj_ang_congruence": adj_ang_congruence,
+                "adj_ang_procrustes": 1 - adj_ang_procrustes,
+            }
+        }
+    )
+```
+
+```{python}
+# | label: congruence-score
+
+congruence_results_df = pd.DataFrame.from_dict(congruence_results).T
+congruence_results_df["Pass"] = (
+    congruence_results_df.adj_ang_congruence >= CongruenceFit.COSINE
+)
+congruence_results_df.index.name = "Language"
+
+congruence_passing = congruence_results_df.query("Pass")
+congruence_failing = congruence_results_df.query("not Pass")
+
+pass_step4 = congruence_passing.index.tolist()
+fail_step4 = congruence_failing.index.tolist()
+
+# congruence_results_df.round(3)
+```
+
+## Confidence Tier Classification {#sec-tiers}
+
+Based on each language's performance across the four steps, we assign a confidence tier that summarises the overall reliability of the translation's circumplex structure:
+
+-   **High Confidence**: The language passes all four steps.
+    The circular ordering is preserved (Step 1), the equal-communality quasi-circumplex model achieves adequate fit (Step 2), the SSM profiles demonstrate strong sinusoidal fit (Step 3), and the congruence between estimated and theoretical positions exceeds the threshold (Step 4).
+    Languages in this tier can be used with confidence for cross-linguistic comparison using the adjusted angles.
+
+-   **Medium Confidence**: The language passes Step 1 (circular ordering is confirmed) but fails one or more of Steps 2 through 4.
+    This category encompasses two distinct scenarios: (a) languages that pass Step 1 but fail the SEM fit criteria in Step 2, indicating that while the ordering of scales is preserved, the detailed circumplex structure does not meet the required standards; and (b) languages that pass both Steps 1 and 2 but fail in Steps 3 or 4, suggesting that while the circumplex structure can be fitted, the adjusted angles do not produce sufficiently reliable locations for external variables.
+    Languages in this tier should be interpreted with caution; their data may still be usable for certain analyses, but the circumplex coordinates may not be directly comparable to those of High Confidence languages without additional caveats.
+
+-   **Low Confidence**: The language fails Step 1 — the fundamental circular ordering of the PAQ scales is not preserved.
+    This represents the most serious structural failure, as even the rank-order relationships among the scales differ from the theoretical model.
+    Languages in this tier should not be used for circumplex-based analyses without substantial further investigation, as the basic prerequisite for a circumplex structure is not met.
+    Possible causes include errors in translation, fundamental semantic differences in how the soundscape attributes are conceptualised in the target language, or insufficient sample sizes.
+
+This tiered system provides practitioners and researchers with a clear, actionable summary of each translation's validity for circumplex-based soundscape assessment, enabling informed decisions about which languages can be included in cross-cultural comparisons and under what conditions.
+
+# Results {#sec-results}
+
+The four-step procedure described in the previous section was applied to all 22 languages in the SATP v1.5 dataset.
+The results for each step are presented below, followed by the assignment of confidence tiers summarising the overall reliability of the circumplex structure in each translation.
+All analyses were conducted using the ipsatised dataset, as described in the methodology.
+
+## Step 1: Circular Order
+
+The correspondence index (CI) and associated randomisation test were calculated for each language against the hypothesised circular order of the eight PAQ scales.
+@tbl-circular-order presents the results.
+
+```{python}
+# | label: tbl-circular-order
+# | tbl-cap: "Results of the circular order analysis for each language in SATP v1.5. CI = Hubert's Correspondence Index; p = randomisation test p-value (Tracey 1997). Languages with CI > 0.70 and p < 0.05 pass Step 1."
+# | output: true
+
+
+def format_rthor_language_results(row_lang: pd.Series, *, incl_p: bool = True):
+    formatted_str = f"{LanguageNames[row_lang.label].value} ({row_lang.label}; CI = {round(row_lang.ci, 3)}"
+    formatted_str += f", *p* = {round(row_lang.p_value, 3)})" if incl_p else ")"
+    return formatted_str
+
+
+def inline_rthor_info(df_langs: pd.DataFrame, *, incl_p: bool = True):
+    formatted_strings = [
+        format_rthor_language_results(row, incl_p=incl_p)
+        for _, row in df_langs.iterrows()
+    ]
+    all_but_last_item = ", ".join(formatted_strings[:-1])
+    return Markdown(f"{all_but_last_item}, and {formatted_strings[-1]}")
+
+
+# Format for printing
+rthor_results.copy()[["label", "ci", "p_value", "passes"]].sort_values(by="ci").rename(
+    columns={
+        "label": "Language",
+        "ci": "CI",
+        "p_value": "p-value",
+        "passes": "Pass Step 1",
+    }
+).round(3)
+```
+
+Of the `{python} len(languages)` languages tested, `{python} len(pass_step1)` passed the circular order test (CI \> `{python} RTHORfit.CI.value` and *p* \< `{python} RTHORfit.p.value`).
+`{python} num2words(len(fail_step1)).title()` languages failed to meet the CI threshold: `{python} inline_rthor_info(rthor_failing)`.
+Although Vietnamese and Malay achieved significant *p*-values, their CI values fell below the `{python} RTHORfit.CI.value` threshold, indicating that the circular ordering of the scales was not sufficiently preserved in these translations.
+Albanian failed on both criteria.
+These three languages were consequently assigned a Low confidence tier and excluded from subsequent steps of the analysis.
+
+Among the passing languages, CI values ranged from `{python} f"{rthor_passing.iloc[0].ci.round(3)}"` for `{python} LanguageNames[rthor_passing.iloc[0].label].print_name_lbl()` to  `{python} f"{rthor_passing.iloc[-1].ci.round(3)}"` for `{python} LanguageNames[rthor_passing.iloc[-1].label].print_name_lbl()`.
+Several languages demonstrated exceptionally strong circular ordering: `{python} inline_rthor_info(rthor_passing.query("ci >= 0.95").sort_values(by="ci", ascending=False), incl_p=False)`.
+The high CI values observed across the majority of translations confirm that the circular ordering of the SCM scales is broadly maintained across the diverse set of languages in the SATP dataset.
+
+## Step 2: Structural Equation Modelling
+
+For the `{python} len(pass_step1)` languages passing Step 1, Browne's [-@Browne1992Circumplex] circular stochastic process model was fitted using the CircE package.
+Four model variations were tested for each language: unconstrained circular, equal spacing, equal communality, and strict circumplex.
+@tbl-sem-results presents the fit indices (CFI, GFI, SRMR) and the resulting score for each language.
+
+```{python}
+# | label: tbl-sem-results
+# | tbl-cap: "SEM fit results for the equal-communality quasi-circumplex model for each language passing Step 1. Thresholds: CFI ≥ 0.92, GFI ≥ 0.90, SRMR < 0.08. Score = number of thresholds met (maximum 3); Pass requires Score = 3."
+# | output: true
+
+
+def format_circe_language_results(row_lang: pd.Series):
+    return f"{LanguageNames[row_lang.language].value} ({row_lang.language}; Score = {row_lang.Score})"
+
+
+def inline_circe_info(df_langs: pd.DataFrame):
+    formatted_strings = [
+        format_circe_language_results(row) for _, row in df_langs.iterrows()
+    ]
+    all_but_last_item = ", ".join(formatted_strings[:-1])
+    return Markdown(f"{all_but_last_item}, and {formatted_strings[-1]}")
+
+
+sem_scores = (
+    sem_res[["language", "model", "n", "m", "cfi", "gfi", "srmr", "Score", "Pass"]]
+    .query("model == 'equal_com'")
+    .sort_values("Score")
+    .drop(columns="model")
+    .rename(
+        columns={
+            "language": "Language",
+            "cfi": "CFI",
+            "gfi": "GFI",
+            "srmr": "SRMR",
+        }
+    )
+)
+sem_scores
+```
+
+The SEM scoring system assigns one point for each fit index meeting its threshold (CFI $\geq$ `{python} CircEfit.CFI.value`, GFI $\geq$ `{python} CircEfit.GFI.value`, SRMR $<$ `{python} CircEfit.SRMR.value`), yielding a maximum score of 3 for a given model.
+A language passes Step 2 if the equal-communality quasi-circumplex model achieves a score of 3 (i.e., all three fit indices meet or exceed their thresholds).
+
+Of the `{python} len(s2_languages)` languages tested, `{python} len(pass_step2)` achieved a score of 3, indicating that a quasi-circumplex model adequately fits the data.
+These languages were: `{python} LanguageNames.print_all_names(pass_step2)`.
+
+`{python} num2words(len(fail_step2)).title()` languages failed to achieve a full score of 3: `{python} inline_circe_info(circe_failing)`.
+These languages were assigned a Medium confidence tier.
+While French and Japanese each met only one of the three fit criteria, Brazilian Portuguese, Thai, Portuguese, and Korean each met two, suggesting a partial but insufficient fit to the quasi-circumplex model.
+
+It is important to note that the sample sizes reported in @tbl-sem-results represent the total number of responses (i.e., the number of participants multiplied by the 27 recordings assessed per participant), not the number of individual participants.
+
+## Step 3: Structural Summary Method (SSM)
+
+For the `{python} len(pass_step2)` languages passing Step 2, the SSM was applied to locate the overall dataset circumplex scales within each language's circumplex space, using the adjusted angles derived from the SEM step.
+The key criterion for this step is the minimum $R^2$ value across all eight scales, which must exceed `{python} SSMfit.R2.value` to indicate a strong fit of the sinusoidal curve to the cosine function.
+
+`{python} num2words(len(pass_step3)).title()` of the `{python} len(pass_step2)` languages met this criterion. All `{python} num2words(len(pass_step3))` were consequently classified as Medium confidence.
+@tbl-ssm-fit presents the SSM fit results.
+
+```{python}
+# | label: tbl-ssm-fit
+# | tbl-cap: "Step 3 SSM $R^2$ values per scale for each language, computed using adjusted angles. Values below 0.80 indicate the scale cannot be reliably located within the circumplex space."
+# | output: true
+
+r2_results_df.sort_values(by="Score").round(2)
+```
+
+The case of Mandarin Chinese (cmn; $R^2_{min}$ = `{python} r2_results_df.loc['cmn'][scales].min().round(2)`), which fell well below the threshold despite passing both Steps 1 and 2 with strong SEM fit indices, is particularly notable. The SEM results for cmn in the SATP v1.5 dataset are identical to those from the previous v1.4 analysis, suggesting that the issue is not related to the SEM fitting itself but rather to changes in the reference circumplex used for the SSM analysis. The cause of this degradation is discussed further in @sec-discussion.
+
+## Step 4: Congruence Analysis
+
+For the `{python} num2words(len(pass_step3))` languages passing Step 3, the congruence between the empirical locations and theoretical expectations was assessed using two complementary metrics: cosine similarity (Tucker's congruence coefficient) and the rotational Procrustes similarity.
+@tbl-congruence presents the congruence results.
+
+```{python}
+# | label: tbl-congruence
+# | tbl-cap: "Step 4 congruence results with equal (45°) and adjusted angles. Cosine = Tucker's Congruence Coefficient (mean diagonal cosine similarity); Procrustes = rotational Procrustes similarity (1 − error). Threshold: cosine > 0.90 with adjusted angles."
+# | output: true
+
+congruence_results_df.rename(
+    columns={
+        "eq_ang_congruence": "Eq Ang Cosine",
+        "adj_ang_congruence": "Corr Ang Cosine",
+        "eq_ang_procrustes": "Eq Ang Procrustes",
+        "adj_ang_procrustes": "Corr Ang Procrustes",
+        "Pass": "Pass Step 4",
+    }
+).round(3)
+```
+
+<!-- {{< embed SATP-Methodology-computation.qmd#tbl-congruence >}} -->
+
+All `{python} num2words(len(pass_step4))` languages demonstrated high congruence with the reference circumplex, confirming that the adjusted angles successfully align the translated circumplexes with the reference structure.
+
+English (eng) achieved the highest congruence on both metrics, as expected given its role as the primary language of the original SCM instrument.
+Swedish (swe), German (deu), and Spanish (spa) also demonstrated particularly strong congruence.
+All languages that reached this step exceeded the congruence thresholds comfortably, confirming that once the SSM fit criterion is met, the adjusted angles produce reliable geometric alignment with the theoretical circumplex structure.
+
+## Confidence Tier Summary
+
+<!-- TODO: Need to review text past this point. -->
+
+Based on the results across all four steps, each language was assigned to one of three confidence tiers reflecting the overall reliability of its circumplex structure.
+@tbl-confidence-tiers presents the final tier assignments.
+
+```{python}
+# | label: tbl-confidence-tiers
+# | tbl-cap: "Confidence tier assignment for all 22 languages in SATP v1.5. CI = Step 1 Correspondence Index; Score = Step 2 SEM fit score (max 3); Min R² = minimum SSM R² across scales (Step 3); Cosine = Step 4 cosine congruence with adjusted angles."
+# | output: true
+
+tier_rows = []
+for lang in languages:
+    s1 = lang in pass_step1
+    s2 = lang in pass_step2 if s1 else False
+    s3 = lang in pass_step3 if s2 else False
+    s4 = lang in pass_step4 if s3 else False
+
+    r2_row = r2_results_df.query("Language == @lang")
+    s3_min_r2 = float(r2_row[scales].min(axis=1).iloc[0]) if not r2_row.empty else None
+    s3 = (s3_min_r2 is not None and s3_min_r2 > SSMfit.R2) if s2 else False
+
+    congruence_row = congruence_results_df.query("Language == @lang")
+    s4_cosine = (
+        float(congruence_row["adj_ang_congruence"].iloc[0])
+        if not congruence_row.empty
+        else None
+    )
+    s4 = (s4_cosine is not None and s4_cosine > CongruenceFit.COSINE) if s3 else False
+
+    # Tier definition aligned with Aletta et al. (2024):
+    # Low    = fail Step 1 (circular ordering not maintained)
+    # Medium = pass Step 1, fail Step 2 (quasi-circumplex not confirmed)
+    #        OR pass Steps 1+2 but fail Step 3/4 (adjusted angles insufficient)
+    # High   = pass all four steps
+    if not s1:
+        tier = "Low"
+    elif not s2:
+        tier = "Medium"
+    elif s3 and s4:
+        tier = "High"
+    else:
+        tier = "Medium"
+
+    tier_rows.append(
+        {
+            "language": lang,
+            "step1_ci": rthor_results.query("label == @lang")["ci"].iloc[0]
+            if lang in rthor_results["label"].values
+            else None,
+            "step1_pass": s1,
+            "step2_score": int(sem_scores.query("Language == @lang")["Score"].iloc[0])
+            if lang in sem_scores["Language"].values
+            else None,
+            "step2_pass": s2,
+            "step3_min_r2": s3_min_r2,
+            "step3_pass": s3,
+            "step4_cosine": s4_cosine,
+            "step4_procrustes": float(congruence_row["adj_ang_procrustes"].iloc[0])
+            if not congruence_row.empty
+            else None,
+            "step4_pass": s4,
+            "tier": tier,
+        }
+    )
+
+tiers_df = pd.DataFrame(tier_rows)
+# tiers_df.to_csv(OUTPUT_DIR / "confidence_tiers.csv", index=False)
+sort_order = {"Low": 0, "Medium": 1, "High": 2}
+tiers_df[
+    ["language", "step1_ci", "step2_score", "step3_min_r2", "step4_cosine", "tier"]
+].sort_values(by="tier", key=lambda x: x.map(sort_order)).round(3)
+```
+
+**High confidence (8 languages).** Languages that passed all four steps, demonstrating a well-preserved circular ordering, adequate quasi-circumplex fit, strong SSM fit, and high congruence with the reference circumplex: Arabic (arb), German (deu), Greek (ell), English (eng), Croatian (hrv), Polish (pol), Spanish (spa), and Swedish (swe).
+
+**Medium confidence (11 languages).** Languages that passed Step 1 but failed at a subsequent step.
+This tier encompasses two distinct failure modes:
+
+-   *Step 2 failure* — Languages whose SEM fit did not meet all three thresholds: Brazilian Portuguese (bra), French (fra), Japanese (jpn), Korean (kor), and Thai (tha).
+    For these languages, the circumplex structure is partially supported, but the fit is insufficient for deriving reliable adjusted angles.
+
+-   *Step 3 failure* — Languages that passed Steps 1 and 2 but failed the SSM criterion: Mandarin Chinese (cmn), Indonesian (ind), Italian (ita), Dutch (nld), Turkish (tur), and Cantonese (yue).
+    Although these languages demonstrated adequate SEM fit indices, their SSM $R^2$ values fell below the 0.90 threshold, indicating that the adjusted angles do not reliably locate the reference circumplex scales within the respective circumplex spaces.
+    The case of Mandarin Chinese ($R^2_{min}$ = 0.611) is particularly striking and is discussed further in @sec-discussion.
+    The remaining five languages — Turkish ($R^2_{min}$ = 0.852), Cantonese ($R^2_{min}$ = 0.865), Indonesian ($R^2_{min}$ = 0.868), Italian ($R^2_{min}$ = 0.883), and Dutch ($R^2_{min}$ = 0.893) — represent more marginal failures, with $R^2$ values approaching but not reaching the threshold.
+
+**Low confidence (3 languages).** Languages that failed Step 1, indicating that the fundamental circular ordering of the PAQ scales was not preserved: Albanian (alb), Vietnamese (vie), and Malay (zsm).
+For these languages, the circumplex structure cannot be assumed, and results obtained using the SCM in these translations should be interpreted with particular caution.
+
+## Adjusted Angles
+
+For the languages achieving High confidence, the adjusted angles derived from the equal communality SEM model are presented in @tbl-adjusted-angles.
+These angles represent the empirically derived positions of each PAQ scale within the circumplex space and serve as the basis for the normalisation procedure described in the next section.
+The adjusted angles reveal varying degrees of deviation from the ideal equal-spacing configuration (where scales would be positioned at 0°, 45°, 90°, 135°, 180°, 225°, 270°, and 315°).
+For most High confidence languages, the deviations are moderate, consistent with the quasi-circumplex structure.
+
+```{python}
+# | label: tbl-adjusted-angles
+# | tbl-cap: "Adjusted angles (degrees) derived from the equal-communality CircE model for each language passing Step 2. PAQ1 (Pleasant) is fixed at 0° as the reference. Remaining angles are freely estimated. All languages and their Step 2 failures are included for reference."
+# | output: true
+
+high_confidence_languages = tiers_df.query("tier == 'High'").language.unique().tolist()
+ang_df.query("language in @high_confidence_languages")
+```
+
+
+To illustrate how the adjustment procedure modifies the assumed positions of the scales, @fig-cmn-equal and @fig-cmn-corrected present Mandarin Chinese (cmn) as an instructive example.
+Although Mandarin Chinese was ultimately classified as Medium confidence due to its Step 3 failure, it passed the SEM fitting in Step 2 with strong fit indices, and the contrast between its equal-spacing (theoretical) and corrected (adjusted) angle placements demonstrates the nature and magnitude of the deviations that the procedure is designed to capture.
+@fig-w06 presents a comparison of the adjusted angle patterns across all High confidence languages, showing the consistency of the angular deviations.
+
+The practical implications of these adjusted angles for cross-cultural comparisons are discussed in the following section on applying the adjusted angles.
+
+# Applying the Adjusted Angles {#sec-applying-angles}
+
+The practical outcome of the four-step validation procedure is a set of adjusted angles for each High-confidence language that can be used to compute corrected soundscape coordinates.
+In a strict circumplex, the eight PAQ scales would be equally spaced at 45-degree intervals (0, 45, 90, ..., 315 degrees), and the ISO/TS 12913-3:2019 projection equations assume precisely this structure.
+However, as our results demonstrate, no translation --- including English --- conforms to a strict circumplex.
+The equal-communality quasi-circumplex model, which allows the angles to vary while maintaining equal radii, consistently provides the best fit across languages.
+The derived angles from this model therefore offer a more accurate representation of the circumplex structure for each translation.
+
+Using these adjusted angles, the ISO projection equations (Annex A.1 and A.2 from ISO/TS 12913-3:2019) can be generalised as follows:
+
+$$
+P_{ISO} = \frac{1}{\lambda_{Pl}} \sum_{i=1}^{8} \cos\theta_i \cdot \sigma_i
+$$ {#eq-isopl}
+
+$$
+E_{ISO} = \frac{1}{\lambda_{Ev}} \sum_{i=1}^{8} \sin\theta_i \cdot \sigma_i
+$$ {#eq-isoev}
+
+where $i$ indexes each circumplex scale, $\theta_i$ gives the adjusted angle for the appropriate language from the equal-communality SEM model, and $\sigma_i$ is the response value for that scale.
+The $1/\lambda$ terms are scaling factors that bring $P_{ISO}$ and $E_{ISO}$ into the range $[-1, +1]$:
+
+$$
+\lambda_{Pl} = \frac{\rho}{2} \sum_{i=1}^{8} |\cos\theta_i|
+$$
+
+$$
+\lambda_{Ev} = \frac{\rho}{2} \sum_{i=1}^{8} |\sin\theta_i|
+$$
+
+where $\rho$ is the range of possible response values.
+In the SATP listening experiments, responses are recorded on a continuous 0--100 scale, giving $\rho = 100$.
+For Likert-scale responses as used in ISO/TS 12913-3:2019, $\rho = 5 - 1 = 4$.
+When equal 45-degree spacing is assumed, these reduce to the familiar $1/(4 + \sqrt{32})$ normalisation factor from the ISO standard.
+
+In more SEM-like terms, we are multiplying each scale by its respective loading expressed in terms of its angle around the circumplex, and then summing the results.
+While some may argue that this system could be treated as a standard SEM, expressing the projection in terms of angles allows us to directly see the relationship between the circumplex structure and the projected coordinate point, and to more easily compare the results with the SSM analysis.
+
+@fig-w06 demonstrates the practical impact of this correction.
+The figure shows the mean perception of a single stimulus (recording W06) plotted on the soundscape circumplex for each High-confidence language, using both equal angles (left panel) and adjusted angles (right panel).
+With equal 45-degree spacing, the coordinates for the same stimulus differ noticeably across languages --- scatter that could be mistakenly attributed to genuine cultural differences in perception.
+When adjusted angles are applied, the cross-language scatter is substantially reduced, and remaining differences can more confidently be attributed to true perceptual variation rather than structural artefacts of the translated instrument.
+
+For High-confidence languages, we therefore recommend that researchers make use of the adjusted angles provided in @tbl-adjusted-angles when computing ISOPleasant and ISOEventful coordinates.
+This applies both to new data collection using PAQ translations and to re-analysis of existing datasets.
+For Medium-confidence languages, the adjusted angles from Step 2 may still improve cross-language comparability, though results should be interpreted with greater caution given the incomplete validation.
+For Low-confidence languages, we advise against applying adjusted angles, as the underlying circumplex structure has not been confirmed.
+
+# Discussion {#sec-discussion}
+
+The results of the four-step validation procedure applied to the SATP v1.5 dataset demonstrate that the quasi-circumplex structure of the Soundscape Circumplex Model is broadly maintained across translations.
+Of the 22 languages assessed, eight achieve High confidence, indicating that these translations reliably preserve the circular arrangement of attributes and can produce valid cross-language soundscape coordinates when adjusted angles are applied.
+This finding supports the universality of the pleasant--eventful dimensional framework for soundscape perception, at least among the linguistic and cultural contexts represented in the SATP initiative.
+
+## Patterns in translation performance
+
+Examining the tier assignments reveals certain patterns across language families.
+The Germanic languages German, English, and Swedish consistently achieve High confidence, though Dutch narrowly misses the SSM threshold.
+Among the Romance languages, Spanish achieves High confidence while Italian and Brazilian Portuguese are classified as Medium.
+The Asian languages show varied results: Mandarin Chinese, Japanese, Korean, Indonesian, and Cantonese all present challenges at different stages of the procedure, with none achieving High confidence.
+Turkish also fails at the SSM step.
+The newly added languages in v1.5 --- Polish, Cantonese (yue), Brazilian Portuguese, and Thai --- show a range of outcomes: Polish joins the High tier, while the others are classified as Medium or Low.
+Albanian, also new in v1.5, fails to maintain circular ordering and is classified as Low.
+
+These patterns suggest that language family membership alone does not determine validation outcomes.
+Rather, the quality of the translation, the specific semantic choices made by each working group, and the cultural familiarity of participants with the perceptual constructs being measured all contribute to the resulting circumplex structure.
+
+## The case of Mandarin Chinese
+
+The change in Mandarin Chinese (cmn) from High confidence in v1.4 to Medium confidence in v1.5 warrants particular attention.
+The SEM results for cmn are identical between dataset versions --- the same data are used, yielding the same fit indices (CFI = 0.960, GFI = 0.954, SRMR = 0.044) and the same derived angles.
+The cmn translation therefore continues to demonstrate a well-fitting quasi-circumplex structure in isolation.
+
+The degradation occurs at Step 3, where the SSM analysis locates each language's circumplex scales within a reference circumplex derived from the overall dataset means.
+In v1.4, this reference was computed from the 12 languages that passed Steps 1 and 2; in v1.5, the reference is computed from 14 languages (with the addition of Polish and Cantonese, among others).
+This change in composition shifts the reference circumplex, and the cmn translation proves sensitive to this shift.
+Furthermore, the cmn adjusted angles are notably compressed --- PAQ2 is located at approximately 18 degrees and PAQ3 at approximately 38 degrees, compared to their theoretical positions of 45 and 90 degrees.
+This compression, where multiple attributes cluster near the pleasant axis, may amplify the sensitivity of the SSM fit to changes in the reference structure.
+
+This case illustrates an important property of the procedure: the validation outcome for a given language is not determined solely by its intrinsic properties but also by its relationship to the broader reference set.
+As the SATP dataset continues to grow, the reference circumplex will evolve, and some languages may shift between tiers.
+This is not a flaw of the procedure but rather reflects the inherently comparative nature of cross-cultural validation.
+We recommend that the procedure be re-applied when the reference dataset is substantially updated.
+
+## Limitations
+
+Several limitations of the present analysis should be acknowledged.
+First, the sample sizes vary across languages, with some translations based on as few as 25 participants.
+In SEM terms, these represent rough sample estimates with potentially wide confidence intervals.
+Given that the study involves within-person repeated measures (each participant assessing 27 recordings), the standard error for the angle estimates should ideally be based on the number of independent clusters (individuals) rather than the total number of observations.
+Future work should incorporate cross-validation with new samples from each country.
+
+Second, all listening experiments used the same set of 27 binaural recordings sourced from London.
+While this standardisation is essential for cross-language comparison, it raises questions about whether the findings generalise to other urban or non-urban soundscapes.
+The selection of stimuli involves a balance between diversity and feasibility, and future studies could explore whether expanding the stimulus set affects the derived circumplex structures.
+
+Third, the procedure assumes that a quasi-circumplex model is appropriate for the data.
+It does not test alternative structural models that might better capture the perceptual dimensions of soundscapes in certain cultural contexts.
+For languages classified as Low confidence, it remains an open question whether the circumplex framework itself is unsuitable or whether the specific translation requires revision.
+
+Finally, it is worth noting that the eight soundscape attributes used in ISO/TS 12913-2 were originally developed in Swedish and translated into English for publication, and it is this English version that has served as the starting point for most subsequent translations.
+The English attributes themselves have not been independently validated via a confirmatory factor analysis.
+While the reference circumplex used in Steps 3 and 4 of our procedure is a pooled grand mean across all contributing languages --- and is therefore not English-specific --- the underlying attribute definitions are nonetheless shaped by the English-Swedish lineage.
+As discussed in this volume, a possible alternative for initiating new translations would be to start from a "proximity" language rather than defaulting to English, an approach that some SATP working groups have already adopted informally.
+
+## Implications for cross-cultural soundscape research
+
+Despite these limitations, the adjusted angles derived from High-confidence translations represent a meaningful advance for cross-cultural soundscape research.
+By applying the corrected projection equations (@eq-isopl, @eq-isoev), researchers can compute ISOPleasant and ISOEventful coordinates that account for the specific structure of each translated instrument.
+This enables direct comparison of soundscape assessments collected in different languages, a capability that was previously either assumed without verification or simply unavailable.
+The three-tier confidence system provides clear guidance: High-tier translations can be directly compared, Medium-tier translations should be used with caution and ideally supplemented with additional validation, and Low-tier translations require revision before cross-cultural comparison is meaningful.
+
+# Conclusions
+
+This chapter has presented a systematic four-step procedure for evaluating and adjusting translated versions of the Soundscape Circumplex Model questionnaire.
+The procedure --- comprising circular order testing, structural equation modelling of the circumplex, structural summary method analysis, and congruence testing --- provides a reproducible framework for assessing the cross-cultural validity of circumplex instruments.
+The accompanying three-tier confidence classification (Low, Medium, High) offers clear, actionable guidance for researchers working with PAQ translations.
+
+Applied to the SATP v1.5 dataset encompassing 22 languages, the procedure identifies 8 languages with High confidence (Arabic, German, Greek, English, Croatian, Polish, Spanish, and Swedish), 11 with Medium confidence (Brazilian Portuguese, Mandarin Chinese, French, Indonesian, Italian, Japanese, Korean, Dutch, Thai, Turkish, and Cantonese), and 3 with Low confidence (Albanian, Vietnamese, and Malay).
+For High-confidence languages, adjusted angles are provided that correct the ISOPleasant and ISOEventful projection equations for the empirically observed circumplex structure, enabling valid cross-language comparisons of soundscape assessments.
+
+The procedure is not limited to soundscape research.
+Any circumplex instrument that has been translated into multiple languages could benefit from the same four-step approach to verify structural equivalence and derive corrective adjustments.
+We encourage researchers working with translated circumplex scales in personality psychology, emotion research, and related fields to consider adopting this framework.
+
+As the SATP initiative continues to grow --- with additional languages, larger samples, and potentially diverse stimulus sets --- we recommend that the validation procedure be periodically re-applied to update the adjusted angles and confidence tiers.
+The goal remains a soundscape assessment framework that is both culturally sensitive and quantitatively comparable, allowing the global research community to build a shared, evidence-based understanding of how people perceive their acoustic environments.

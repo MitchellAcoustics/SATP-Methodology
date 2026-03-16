@@ -1,28 +1,74 @@
 project:
-  type: manuscript
+  title: "Chapter 4 - Soundscape Translation Data: Analysis, Validation, and Application"
+  output-dir: _output
 
-manuscript:
-  article: index.qmd
-  notebooks: 
-    - notebook: computation/SATP-Methodology.ipynb
-      title: "SATP Methodology"
+author:
+  - name: Andrew Mitchell
+    email: a.j.mitchell@ucl.ac.uk
+    affiliations:
+      - id: ucl-iede
+        name: University College London
+        department: Institute for Environmental Design and Engineering
+        address: Central House, 14 Upper Woburn Place
+        city: London
+        state: UK
+        postal-code: WC1H 0NN
+    attributes:
+      corresponding: true
+    orcid: 0000-0003-0978-5046
+  - name: Tin Oberman
+    email: t.oberman@ucl.ac.uk
+    affiliations:
+      - ref: ucl-iede
+    orcid: 0000-0002-0014-0383
+  - name: Francesco Aletta
+    email: f.aletta@ucl.ac.uk
+    orcid: 0000-0003-0351-3189
+    affiliations:
+      - ref: ucl-iede
+  - name: Jian Kang
+    email: j.kang@ucl.ac.uk
+    orcid: 0000-0001-8995-5636
+    affiliations:
+      - ref: ucl-iede
+  - name: Östen Axelsson
+    email: osten.axelsson@ki.se
+    orcid: 0000-0002-2690-7044
+    affiliations:
+      - id: karolinska
+        name: Karolinska Institutet
+        department: Institute of Environmental Medicine
+        city: Stockholm
+        state: Sweden
+
+keywords:
+  - Soundscape
 
 number-sections: true
+bibliography: references.bib
 
 format:
   html:
-    comments:
-      hypothesis: true
     theme: cosmo
-  nature-pdf: default
+    code-fold: true
+    execute:
+      output: true
+      echo: true
+    embed-resources: true
+  academic-typst:
+    section-numbering: "1.1.1"
+    bibliographystyle: "chicago-author-date"
+    include-in-header:
+      - text: '#import "@preview/mitex:0.2.4": *'
   docx: default
-  jats: default
 
-  # (other formats)
-  # pdf: default
+filters:
+  - abstract-section
 
 execute:
-  freeze: true
-
-
-
+  freeze: auto
+  echo: false
+  output: false
+  warning: false
+  cache: false
+  

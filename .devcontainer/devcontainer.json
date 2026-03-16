@@ -1,36 +1,59 @@
 {
-  "name": "Release - Quarto Codespaces",
-  "image": "ghcr.io/mcanouil/quarto-codespaces:latest",
-  "remoteUser": "vscode",
-  "features": {
-    "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
-      "version": "release"
-    }
-  },
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "quarto.quarto",
-        "mcanouil.quarto-wizard",
-        "REditorSupport.r",
-        "ms-python.python",
-        "julialang.language-julia",
-        "ms-python.black-formatter",
-        "ms-python.flake8",
-        "ms-python.vscode-pylance",
-        "ms-python.pylint",
-        "ms-python.isort",
-        "ms-toolsai.jupyter",
-        "Posit.air-vscode"
-      ],
-      "settings": {
-        "r.rterm.option": ["--no-save", "--no-restore-data", "--quiet"],
-        "r.useRenvLibPath": true,
-        "[r]": {
-          "editor.defaultFormatter": "Posit.air-vscode",
-          "editor.formatOnSave": true
+    "name": "SATP Methodology - Dev Container",
+    "dockerComposeFile": ["docker-compose.yaml"],
+    "service": "satp-dev",
+    "remoteUser": "vscode",
+    "workspaceFolder": "/workspace"
+    // "features": {
+    //     "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
+    //         "version": "latest"
+    //     }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "charliermarsh.ruff",
+                "ms-python.debugpy",
+                "ms-python.vscode-pylance",
+                "ms-vscode.makefile-tools",
+                "ms-azuretools.vscode-docker",
+                "quarto.quarto",
+                "REditorSupport.r",
+                "Posit.air-vscode",
+                "yzhang.markdown-all-in-one",
+                "tamasfe.even-better-toml",
+                "redhat.vscode-yaml",
+                "eamodio.gitlens",
+                "mhutchie.git-graph"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+                "python.linting.enabled": true,
+                "python.linting.ruffEnabled": true,
+                "python.formatting.provider": "none",
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.fixAll.ruff": "explicit"
+                    }
+                },
+                "jupyter.notebookFileRoot": "${workspaceFolder}",
+                "quarto.render.previewType": "external"
+            }
         }
-      }
+    },
+    "containerEnv": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "RENV_PATHS_CACHE": "/home/vscode/.cache/R/renv",
+        "RENV_CONFIG_PAK_ENABLED": "TRUE",
+        "UV_LINK_MODE": "copy"
+    },
+    "postCreateCommand": "bash .devcontainer/init-env.sh",
+    "remoteEnv": {
+        "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
     }
-  }
 }
