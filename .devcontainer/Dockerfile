@@ -13,6 +13,8 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Install Python, R dev libs, and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gdebi-core \
     python3 \
     python3-dev \
     python3-venv \
@@ -24,6 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libicu-dev \
     libssl-dev \
     libxml2-dev \
+    libx11-dev \
     ca-certificates \
     git \
     wget \
@@ -37,10 +40,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtiff5-dev \
     libjpeg-dev \
     pandoc \
+    # Fonts
+    unzip \
+    fontconfig \
+    # fonts-libertinus \
+    fonts-font-awesome \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy uv binary from official distroless image
 COPY --from=ghcr.io/astral-sh/uv:0.10.5 /uv /uvx /bin/
+
+# Install quarto
+COPY .devcontainer/install_quarto.sh /tmp/install_quarto.sh
+RUN chmod +x /tmp/install_quarto.sh && /tmp/install_quarto.sh && rm /tmp/install_quarto.sh
 
 # Create vscode user (matching VS Code devcontainer conventions)
 RUN groupadd --gid 1000 vscode && \
@@ -52,8 +64,8 @@ RUN groupadd --gid 1000 vscode && \
     chown -R vscode:vscode /home/vscode
 
 # Copy and run font installation script
-COPY .devcontainer/install_fonts.sh /tmp/install_fonts.sh
-RUN chmod +x /tmp/install_fonts.sh && /tmp/install_fonts.sh && rm /tmp/install_fonts.sh
+# Update font cache
+RUN fc-cache -f -v
 
 # Configure R library directory for vscode user to write packages
 RUN mkdir -p /usr/local/lib/R/site-library && \
