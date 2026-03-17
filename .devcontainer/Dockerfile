@@ -17,10 +17,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     git \
+    direnv \
+    gdebi-core \ 
     libcurl4-openssl-dev \
+    libpcre2-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libicu-dev \
     libssl-dev \
     libxml2-dev \
-    direnv \
+    libx11-dev \
+    ca-certificates \
+    git \
+    wget \
+    sudo \
+    build-essential \
+    jq \
+    pkg-config \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    pandoc \
+    # Fonts
+    unzip \
+    fontconfig \
+    # fonts-libertinus \
+    fonts-font-awesome \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -L -o /usr/local/bin/pixi -fsSL --compressed "https://github.com/prefix-dev/pixi/releases/download/${PIXI_VERSION}/pixi-$(uname -m)-unknown-linux-musl" \
@@ -28,8 +52,11 @@ RUN curl -L -o /usr/local/bin/pixi -fsSL --compressed "https://github.com/prefix
     && pixi info
 
 # Install quarto
-COPY .devcontainer/install_quarto.sh /tmp/install_quarto.sh
-RUN chmod +x /tmp/install_quarto.sh && /tmp/install_quarto.sh && rm /tmp/install_quarto.sh
+# COPY .devcontainer/install_quarto.sh /tmp/install_quarto.sh
+# RUN chmod +x /tmp/install_quarto.sh && /tmp/install_quarto.sh && rm /tmp/install_quarto.sh
+
+# Update font cache
+RUN fc-cache -f -v
 
 # set some user and workdir settings to work nicely with vscode
 USER vscode
