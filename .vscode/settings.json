@@ -22,7 +22,6 @@
     "Tarlao",
     "tqdm"
   ],
-  "python-envs.pythonProjects": [],
   "terminal.integrated.profiles.linux": {
     "BashWithStartup": {
       "path": "bash",
@@ -45,5 +44,6 @@
     "*.parquet": "duckdb.dataFileViewer",
     "*.csv": "duckdb.dataFileViewer",
     "*.tsv": "duckdb.dataFileViewer"
-  }
+  },
+  "python-envs.defaultEnvManager": "ms-python.python:system"
 }

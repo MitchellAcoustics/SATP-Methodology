@@ -1,14 +1,15 @@
 {
     "name": "SATP Methodology - Dev Container",
-    "dockerComposeFile": ["docker-compose.yaml"],
-    "service": "satp-dev",
-    "remoteUser": "vscode",
-    "workspaceFolder": "/workspace"
-    // "features": {
-    //     "ghcr.io/rocker-org/devcontainer-features/quarto-cli:1": {
-    //         "version": "latest"
-    //     }
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
     },
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2.16.1": {}
+    },
+    "mounts": [
+        "source=${localWorkspaceFolderBasename}-pixi,target=${containerWorkspaceFolder}/.pixi,type=volume"
+    ],
     "customizations": {
         "vscode": {
             "extensions": [
@@ -26,7 +27,8 @@
                 "tamasfe.even-better-toml",
                 "redhat.vscode-yaml",
                 "eamodio.gitlens",
-                "mhutchie.git-graph"
+                "mhutchie.git-graph",
+                "mkhl.direnv"
             ],
             "settings": {
                 "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
@@ -46,14 +48,11 @@
         }
     },
     "containerEnv": {
-        "PYTHONUNBUFFERED": "1",
-        "PYTHONDONTWRITEBYTECODE": "1",
-        "RENV_PATHS_CACHE": "/home/vscode/.cache/R/renv",
-        "RENV_CONFIG_PAK_ENABLED": "TRUE",
-        "UV_LINK_MODE": "copy"
+        // "PYTHONUNBUFFERED": "1",
+        // "PYTHONDONTWRITEBYTECODE": "1",
+        // "RENV_PATHS_CACHE": "/home/vscode/.cache/R/renv",
+        // "RENV_CONFIG_PAK_ENABLED": "TRUE",
+        // "UV_LINK_MODE": "copy"
     },
-    "postCreateCommand": "bash .devcontainer/init-env.sh",
-    "remoteEnv": {
-        "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
-    }
+    "postCreateCommand": "direnv allow && sudo chown vscode .pixi && pixi global install direnv && pixi install && pixi shell && pixi run install-circe"
 }

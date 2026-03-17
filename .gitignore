@@ -17,3 +17,6 @@ resources
 *_files
 _freeze
 /.quarto/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
